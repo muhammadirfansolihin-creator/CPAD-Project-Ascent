@@ -2,7 +2,9 @@
   <div class="login-page">
     <div class="login-card">
       <div class="login-brand">
-        <div class="login-logo">🍴</div>
+       <div class="login-logo">
+  <img src="/favicon.png" alt="CampusEats Logo" />
+</div>
         <h1>CampusEats</h1>
         <p>Your campus food, ready when you are.</p>
       </div>

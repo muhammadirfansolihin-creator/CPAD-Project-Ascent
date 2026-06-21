@@ -27,6 +27,25 @@ body {
 
 #app { min-height: 100vh; display: flex; flex-direction: column; }
 
+
+/* ── Login View ──────────────────────────────────────────── */
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;   
+}
+
+.login-logo {
+  margin: 0;
+}
+
+.login-logo img {
+  display: block;
+  width: 180px;
+  height: auto;
+}
+
 /* ── Utility ─────────────────────────────────────────────── */
 .container { max-width: 960px; margin: 0 auto; padding: 0 1rem; }
 .text-muted { color: var(--color-muted); font-size: 0.875rem; }
