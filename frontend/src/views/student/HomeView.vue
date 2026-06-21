@@ -4,7 +4,23 @@
       <div>
         <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
       </div>
-      <div class="navbar-actions">
+      
+      <div class="navbar-actions" style="position:relative">
+        <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
+          🔔
+          <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
+        </button>
+
+        <div v-if="showNotif" class="notif-dropdown">
+          <div class="notif-dropdown-header">Notifications</div>
+          <div v-if="!notif.notifications.length" class="notif-empty">No notifications yet</div>
+          <div v-for="n in notif.notifications" :key="n.id" @click="handleNotifClick(n)"
+          :class="['notif-item', { unread: !n.isRead }]">
+          <div>{{ n.message }}</div>
+          <div class="notif-item-time">{{ n.createdAt }}</div>
+        </div>
+    </div>
+
         <router-link to="/cart" class="navbar-icon-btn">
           🛒
           <span v-if="cart.itemCount" class="badge-dot"></span>
@@ -128,9 +144,22 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
+import { useNotificationStore } from '@/stores/notifications'
 
 const auth   = useAuthStore()
 const cart   = useCartStore()
+
+const notif  = useNotificationStore()
+const showNotif = ref(false)
+
+function toggleNotif() {
+  showNotif.value = !showNotif.value
+}
+
+async function handleNotifClick(n) {
+  if (!n.isRead) await notif.markAsRead(n.id)
+}
+
 const search = ref('')
 const selectedCat = ref('all')
 const vendors = ref([])
@@ -190,6 +219,7 @@ function scrollToVendors() {
 }
 
 onMounted(async () => {
+  notif.fetchNotifications()
   try {
     const { data } = await axios.get('/api/vendors')
     vendors.value = data

@@ -10,7 +10,24 @@
           <span :class="store.myVendor.isOpen?'open-dot':'closed-dot'"></span>
           {{ store.myVendor.isOpen ? 'Open' : 'Closed' }}
         </button>
-        <button class="navbar-icon-btn">🔔</button>
+        
+        <div style="position:relative">
+          <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
+            🔔
+            <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
+          </button>
+
+          <div v-if="showNotif" class="notif-dropdown">
+            <div class="notif-dropdown-header">Notifications</div>
+            <div v-if="!notif.notifications.length" class="notif-empty">No notifications yet</div>
+            <div v-for="n in notif.notifications" :key="n.id" @click="handleNotifClick(n)"
+              :class="['notif-item', { unread: !n.isRead }]">
+              <div>{{ n.message }}</div>
+              <div class="notif-item-time">{{ n.createdAt }}</div>
+            </div>
+          </div>
+        </div>
+
         <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
       </div>
     </nav>
@@ -126,9 +143,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVendorOrdersStore } from '@/stores/vendorOrders'
+import { useNotificationStore } from '@/stores/notifications'
 
 const auth    = useAuthStore()
 const store   = useVendorOrdersStore()
+const notif = useNotificationStore()
+const showNotif = ref(false)
 const loading = ref(true)
 const search  = ref('')
 const dateFilter = ref('today')
@@ -163,6 +183,15 @@ function isUrgent(order) {
 function formatItems(items) { return (items||[]).map(i=>`+${i.quantity||i.qty||1} ${i.name}`).join(' ') }
 function formatTime(d) { return d ? new Date(d).toLocaleTimeString('en-MY', { hour:'2-digit', minute:'2-digit', hour12:false }) : '' }
 
+function toggleNotif() {
+  showNotif.value = !showNotif.value
+}
+
+function handleNotifClick(n) {
+  notif.markAsRead(n.id)
+  showNotif.value = false
+}
+
 async function advance(id, status) {
   await store.updateStatus(id, status)
   if (store.myVendor) await store.fetchOrders(store.myVendor.id)
@@ -181,5 +210,6 @@ onMounted(async () => {
     if (!store.myVendor) await store.fetchMyVendor(auth.user?.id)
     if (store.myVendor) await store.fetchOrders(store.myVendor.id)
   } finally { loading.value = false }
+  notif.fetchNotifications()
 })
 </script>

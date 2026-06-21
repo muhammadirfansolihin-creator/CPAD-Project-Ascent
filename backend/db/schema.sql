@@ -85,6 +85,17 @@ CREATE TABLE IF NOT EXISTS disputes (
     FOREIGN KEY (reported_by) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT NOT NULL,
+    order_id   INT NOT NULL,
+    message    TEXT NOT NULL,
+    is_read    TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id)  REFERENCES users(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
 -- Seed demo accounts (password: password123)
 INSERT IGNORE INTO users (name, email, password_hash, role) VALUES
 ('Administrator',   'admin@campuseats.my',   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),

@@ -10,7 +10,24 @@
           <span :class="store.myVendor.isOpen?'open-dot':'closed-dot'"></span>
           {{ store.myVendor.isOpen ? 'Open' : 'Closed' }}
         </button>
-        <button class="navbar-icon-btn">🔔</button>
+        
+        <div style="position:relative">
+          <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
+            🔔
+            <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
+          </button>
+
+          <div v-if="showNotif" class="notif-dropdown">
+            <div class="notif-dropdown-header">Notifications</div>
+            <div v-if="!notif.notifications.length" class="notif-empty">No notifications yet</div>
+            <div v-for="n in notif.notifications" :key="n.id" @click="handleNotifClick(n)"
+              :class="['notif-item', { unread: !n.isRead }]">
+              <div>{{ n.message }}</div>
+              <div class="notif-item-time">{{ n.createdAt }}</div>
+            </div>
+          </div>
+        </div>
+
         <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
       </div>
     </nav>
@@ -145,9 +162,12 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVendorOrdersStore } from '@/stores/vendorOrders'
+import { useNotificationStore } from '@/stores/notifications'
 
 const auth  = useAuthStore()
 const store = useVendorOrdersStore()
+const notif = useNotificationStore()
+const showNotif = ref(false)
 const loading = ref(true); const showModal = ref(false); const editingItem = ref(null)
 const saving = ref(false); const formError = ref(''); const activeCat = ref('all')
 
@@ -162,6 +182,15 @@ const filteredItems = computed(() => activeCat.value === 'all' ? store.menuItems
 
 function catLabel(c) { return { rice:'Rice', noodles:'Noodles', drinks:'Drinks', snacks:'Snacks', other:'Other' }[c] || c }
 function itemEmoji(cat) { return { rice:'🍚', noodles:'🍜', drinks:'🥤', snacks:'🍡', other:'🍽️' }[cat] || '🍽️' }
+
+function toggleNotif() {
+  showNotif.value = !showNotif.value
+}
+
+function handleNotifClick(n) {
+  notif.markAsRead(n.id)
+  showNotif.value = false
+}
 
 function resetForm() { form.name=''; form.description=''; form.price=''; form.category='rice'; form.isAvailable=true; formError.value=''; editingItem.value=null }
 function openAdd() { resetForm(); showModal.value=true }
@@ -190,5 +219,6 @@ onMounted(async () => {
     if (!store.myVendor) await store.fetchMyVendor(auth.user?.id)
     if (store.myVendor) await store.fetchMenu(store.myVendor.id)
   } finally { loading.value=false }
+  notif.fetchNotifications()
 })
 </script>
