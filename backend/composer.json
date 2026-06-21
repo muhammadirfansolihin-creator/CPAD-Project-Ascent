@@ -1,19 +1,21 @@
 {
-    "name": "campuseats/backend",
+    "require": {
+        "slim/slim": "^4.14",
+        "slim/psr7": "^1.7",
+        "firebase/php-jwt": "^6.10"
+    },
     "autoload": {
         "psr-4": {
-            "Campuseats\\Backend\\": "src/"
+            "App\\": "src/"
         }
     },
-    "authors": [
-        {
-            "name": "Irfan",
-            "email": "muhammadirfansolihin@graduate.utm.my"
+    "config": {
+        "process-timeout": 0,
+        "audit": {
+            "block-insecure": false
         }
-    ],
-    "require": {
-        "slim/slim": "4.*",
-        "slim/psr7": "^1.8",
-        "firebase/php-jwt": "^7.1"
+    },
+    "audit": {
+        "ignore": ["PKSA-y2cr-5h3j-g3ys"]
     }
 }

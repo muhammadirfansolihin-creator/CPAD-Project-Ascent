@@ -1,0 +1,90 @@
+<template>
+  <div>
+    <nav class="navbar">
+      <span class="navbar-brand">CampusEats Admin</span>
+      <button class="btn btn-ghost btn-sm" @click="auth.logout()">Sign Out</button>
+    </nav>
+
+    <div class="admin-tabs">
+      <router-link to="/admin"           class="admin-tab">Sales Summary</router-link>
+      <router-link to="/admin/vendors"   class="admin-tab active">Vendors</router-link>
+      <router-link to="/admin/disputes"  class="admin-tab">Disputes</router-link>
+    </div>
+
+    <div class="page" style="padding-bottom:2rem">
+      <div v-if="loading" class="loading"><div class="spinner"></div></div>
+      <div v-else-if="!store.vendors.length" class="empty">
+        <div class="empty-icon">🏪</div>
+        <p>No vendors found</p>
+      </div>
+
+      <template v-else>
+        <!-- Filter tabs -->
+        <div class="category-tabs" style="margin-bottom:1rem">
+          <button v-for="f in filters" :key="f.value" :class="['cat-tab', filter===f.value?'active':'']" @click="filter=f.value">
+            {{ f.label }} ({{ countByStatus[f.value] || 0 }})
+          </button>
+        </div>
+
+        <div v-for="v in filteredVendors" :key="v.id" class="card" style="margin-bottom:0.75rem">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:0.95rem">{{ v.name }}</div>
+                <div class="text-muted" style="font-size:0.8rem;margin-top:0.2rem">📍 {{ v.location }}</div>
+                <div class="text-muted" style="font-size:0.78rem">Owner: {{ v.ownerName }}</div>
+                <div v-if="v.rating" style="font-size:0.78rem;color:#92400e;margin-top:0.2rem">⭐ {{ v.rating }}</div>
+              </div>
+              <span :class="['badge', `badge-${v.status}`]">{{ v.status }}</span>
+            </div>
+
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.85rem">
+              <template v-if="v.status === 'pending'">
+                <button class="btn btn-success btn-sm" @click="updateStatus(v.id, 'active')">Approve</button>
+                <button class="btn btn-danger btn-sm" @click="updateStatus(v.id, 'inactive')">Reject</button>
+              </template>
+              <template v-else-if="v.status === 'active'">
+                <button class="btn btn-danger btn-sm" @click="updateStatus(v.id, 'inactive')">Deactivate</button>
+              </template>
+              <template v-else-if="v.status === 'inactive'">
+                <button class="btn btn-success btn-sm" @click="updateStatus(v.id, 'active')">Reactivate</button>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useAdminDashboardStore } from '@/stores/adminDashboard'
+
+const auth    = useAuthStore()
+const store   = useAdminDashboardStore()
+const loading = ref(true)
+const filter  = ref('all')
+
+const filters = [
+  { value: 'all',      label: 'All' },
+  { value: 'pending',  label: 'Pending' },
+  { value: 'active',   label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+]
+
+const countByStatus = computed(() => {
+  const map = { all: store.vendors.length }
+  for (const v of store.vendors) map[v.status] = (map[v.status] || 0) + 1
+  return map
+})
+
+const filteredVendors = computed(() => filter.value === 'all' ? store.vendors : store.vendors.filter(v => v.status === filter.value))
+
+async function updateStatus(vendorId, status) {
+  await store.updateVendorStatus(vendorId, status)
+}
+
+onMounted(async () => { try { await store.fetchVendors() } finally { loading.value = false } })
+</script>

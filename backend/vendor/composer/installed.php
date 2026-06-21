@@ -1,19 +1,19 @@
 <?php return array(
     'root' => array(
-        'name' => 'campuseats/backend',
+        'name' => '__root__',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '713bcf68781444d3258c0758917df162794aaf66',
+        'reference' => '7946d9eddd0f6f507a965e89ecbf7295f86df1be',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        'campuseats/backend' => array(
+        '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '713bcf68781444d3258c0758917df162794aaf66',
+            'reference' => '7946d9eddd0f6f507a965e89ecbf7295f86df1be',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -29,9 +29,9 @@
             'dev_requirement' => false,
         ),
         'firebase/php-jwt' => array(
-            'pretty_version' => 'v7.1.0',
-            'version' => '7.1.0.0',
-            'reference' => 'b374a5d1a4f1f67fadc2165cdb284645945e2fc0',
+            'pretty_version' => 'v6.11.1',
+            'version' => '6.11.1.0',
+            'reference' => 'd1e91ecf8c598d073d0995afa8cd5c75c6e19e66',
             'type' => 'library',
             'install_path' => __DIR__ . '/../firebase/php-jwt',
             'aliases' => array(),
