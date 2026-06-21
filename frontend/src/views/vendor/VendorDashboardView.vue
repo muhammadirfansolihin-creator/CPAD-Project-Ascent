@@ -10,7 +10,24 @@
           <span :class="store.myVendor.isOpen?'open-dot':'closed-dot'"></span>
           {{ store.myVendor.isOpen ? 'Open' : 'Closed' }}
         </button>
-        <button class="navbar-icon-btn">🔔<span class="badge-dot"></span></button>
+        
+        <div style="position:relative">
+          <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
+            🔔
+            <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
+          </button>
+
+          <div v-if="showNotif" class="notif-dropdown">
+            <div class="notif-dropdown-header">Notifications</div>
+            <div v-if="!notif.notifications.length" class="notif-empty">No notifications yet</div>
+            <div v-for="n in notif.notifications" :key="n.id" @click="handleNotifClick(n)"
+              :class="['notif-item', { unread: !n.isRead }]">
+              <div>{{ n.message }}</div>
+              <div class="notif-item-time">{{ n.createdAt }}</div>
+            </div>
+          </div>
+        </div>
+
         <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
       </div>
     </nav>
@@ -118,9 +135,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVendorOrdersStore } from '@/stores/vendorOrders'
+import { useNotificationStore } from '@/stores/notifications'
 
 const auth  = useAuthStore()
 const store = useVendorOrdersStore()
+const notif = useNotificationStore()
+const showNotif = ref(false)
 const loading = ref(true)
 
 const today = new Date().toLocaleDateString('en-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
@@ -157,6 +177,15 @@ function isUrgent(order) {
 
 function formatItems(items) { return (items||[]).map(i=>`+${i.quantity||i.qty||1} ${i.name}`).join(' ') }
 
+function toggleNotif() {
+  showNotif.value = !showNotif.value
+}
+
+function handleNotifClick(n) {
+  notif.markAsRead(n.id)
+  showNotif.value = false
+}
+
 async function toggleOpen() { if (store.myVendor) await store.toggleOpen(store.myVendor.id) }
 
 async function advance(id, status) {
@@ -167,6 +196,7 @@ async function advance(id, status) {
 
 onMounted(async () => {
   try { await store.fetchMyVendor(); store.startPolling(10000) } finally { loading.value = false }
+  notif.fetchNotifications()
 })
 onUnmounted(() => store.stopPolling())
 </script>

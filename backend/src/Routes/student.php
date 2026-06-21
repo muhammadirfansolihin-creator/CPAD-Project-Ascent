@@ -179,6 +179,16 @@ $app->post('/api/orders', function (Request $req, Response $res) {
         $ii->execute([$orderId, $r['menuItemId'], $r['name'], $r['qty'], number_format($r['unitPrice'], 2, '.', '')]);
     }
 
+     // Notify the vendor owner about the new order
+    $vOwner = $db->prepare('SELECT owner_id FROM vendors WHERE id = ?');
+    $vOwner->execute([$vendorId]);
+    $vendorRow = $vOwner->fetch();
+    if ($vendorRow) {
+        $notifMsg = "New order #{$orderId} received.";
+        $db->prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?,?,?)')
+           ->execute([(int) $vendorRow['owner_id'], $orderId, $notifMsg]);
+    }
+
     $v  = $db->prepare('SELECT name FROM vendors WHERE id = ?'); $v->execute([$vendorId]);
     $cu = $db->prepare('SELECT name FROM users   WHERE id = ?'); $cu->execute([$userId]);
 
