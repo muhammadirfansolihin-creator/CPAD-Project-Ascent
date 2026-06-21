@@ -1,57 +1,63 @@
 <template>
   <div>
     <nav class="navbar">
-      <span class="navbar-brand">CampusEats Admin</span>
-      <button class="btn btn-ghost btn-sm" @click="auth.logout()">Sign Out</button>
+      <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
+      <div class="navbar-actions">
+        <button class="navbar-icon-btn">🔔<span class="badge-dot"></span></button>
+        <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
+      </div>
     </nav>
 
     <div class="admin-tabs">
-      <router-link to="/admin"           class="admin-tab active">Sales Summary</router-link>
-      <router-link to="/admin/vendors"   class="admin-tab">Vendors</router-link>
-      <router-link to="/admin/disputes"  class="admin-tab">Disputes</router-link>
+      <router-link to="/admin"          class="admin-tab">Sales Summary</router-link>
+      <router-link to="/admin/vendors"  class="admin-tab">Vendors</router-link>
+      <router-link to="/admin/disputes" class="admin-tab">Disputes</router-link>
     </div>
 
     <div class="page" style="padding-bottom:2rem">
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
       <template v-else-if="store.analytics">
-        <!-- Metric cards -->
-        <div class="grid-4" style="margin-bottom:1.5rem">
+        <!-- Stats -->
+        <div class="grid-2" style="margin-bottom:1.25rem">
           <div class="stat-card">
+            <div class="stat-label">ORDERS TODAY</div>
             <div class="stat-value">{{ store.analytics.totalOrders }}</div>
-            <div class="stat-label">Total Orders</div>
+            <div class="stat-change up">↑ +10% vs yesterday</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value">RM {{ store.analytics.totalRevenue.toFixed(2) }}</div>
-            <div class="stat-label">Total Revenue</div>
+            <div class="stat-label">REVENUE TODAY</div>
+            <div class="stat-value" style="color:var(--color-primary)">RM {{ store.analytics.totalRevenue.toFixed(0) }}</div>
+            <div class="stat-change up">↑ +12% vs yesterday</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value">{{ store.analytics.activeVendors }}</div>
-            <div class="stat-label">Active Vendors</div>
+            <div class="stat-label">ACTIVE VENDORS</div>
+            <div class="stat-value" style="color:var(--color-success)">{{ store.analytics.activeVendors }}</div>
+            <div class="stat-sub">1 pending approval</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value" :style="store.analytics.openDisputes ? 'color:var(--color-danger)' : ''">
-              {{ store.analytics.openDisputes }}
-            </div>
-            <div class="stat-label">Open Disputes</div>
+            <div class="stat-label">OPEN DISPUTES</div>
+            <div class="stat-value" :style="store.analytics.openDisputes?'color:var(--color-danger)':''">{{ store.analytics.openDisputes }}</div>
+            <div class="stat-sub" :style="store.analytics.openDisputes?'color:var(--color-danger)':''">{{ store.analytics.openDisputes ? '1 urgent' : 'All clear' }}</div>
           </div>
         </div>
 
         <!-- Sales by vendor -->
         <div class="card">
-          <div class="card-header">Sales by Vendor</div>
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Sales by Vendor</span>
+            <a class="section-row-link" style="font-weight:600;font-size:0.8rem">See all →</a>
+          </div>
           <div class="card-body">
-            <div v-if="!store.analytics.vendorRevenue.length" class="empty" style="padding:1rem">
-              <p>No revenue data yet</p>
-            </div>
-            <div v-for="v in store.analytics.vendorRevenue" :key="v.vendorId" style="margin-bottom:1rem">
-              <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem">
-                <span style="font-weight:700;font-size:0.88rem">{{ v.vendorName }}</span>
-                <span style="font-size:0.85rem;font-weight:700;color:var(--color-primary)">RM {{ v.revenue.toFixed(2) }}</span>
+            <div v-if="!store.analytics.vendorRevenue.length" class="empty" style="padding:1rem"><p>No revenue data yet</p></div>
+            <div v-for="v in store.analytics.vendorRevenue" :key="v.vendorId" style="margin-bottom:1.25rem">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
+                <span style="font-weight:700;font-size:0.9rem">{{ v.vendorName }}</span>
+                <span style="font-weight:700;color:var(--color-primary)">RM {{ v.revenue.toFixed(0) }}</span>
               </div>
-              <div class="progress-bar">
+              <div class="progress-bar" style="height:8px">
                 <div class="progress-fill" :style="`width:${barWidth(v.revenue)}%`"></div>
               </div>
-              <div class="text-muted" style="font-size:0.75rem;margin-top:0.2rem">{{ v.orderCount }} orders</div>
+              <div style="font-size:0.72rem;color:var(--color-muted);margin-top:0.2rem">{{ v.orderCount }} orders</div>
             </div>
           </div>
         </div>

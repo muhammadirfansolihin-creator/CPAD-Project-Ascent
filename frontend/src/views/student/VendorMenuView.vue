@@ -1,57 +1,74 @@
 <template>
   <div>
     <nav class="navbar">
-      <router-link to="/" class="btn btn-ghost btn-sm">← Back</router-link>
-      <span v-if="vendor" style="font-weight:700">{{ vendor.name }}</span>
-      <div></div>
+      <router-link to="/" class="navbar-icon-btn" style="font-size:1.2rem;text-decoration:none">←</router-link>
+      <div class="navbar-brand" style="font-size:1rem">{{ vendor?.name || 'Menu' }}</div>
+      <router-link to="/cart" class="navbar-icon-btn">
+        🛒<span v-if="cart.itemCount" class="badge-dot"></span>
+      </router-link>
     </nav>
 
     <div v-if="loading" class="loading"><div class="spinner"></div></div>
     <template v-else-if="vendor">
+      <!-- Vendor hero -->
       <div class="vendor-hero">
-        <div class="vendor-hero-icon">{{ vendorEmoji(vendor.name) }}</div>
-        <div>
-          <h1>{{ vendor.name }}</h1>
-          <div class="vendor-hero-meta">📍 {{ vendor.location }} · 🕐 {{ vendor.openingHours }}</div>
-          <div style="margin-top:0.4rem;display:flex;gap:0.5rem;align-items:center">
-            <span :class="['badge', vendor.isOpen?'badge-open':'badge-inactive']">{{ vendor.isOpen?'Open':'Closed' }}</span>
-            <span v-if="vendor.rating" style="font-size:0.82rem;color:#92400e">⭐ {{ vendor.rating }}</span>
-          </div>
+        <h1>{{ vendor.name }}</h1>
+        <div class="vendor-hero-location">
+          📍 {{ vendor.location }}
+          <span style="margin:0 0.5rem;color:var(--color-border)">·</span>
+          <strong>Opening Hours:</strong> {{ vendor.openingHours }}
+        </div>
+        <div class="vendor-hero-rating">
+          <span v-if="vendor.rating">★ {{ vendor.rating }}</span>
+          <span v-if="vendor.rating" style="color:var(--color-muted);font-weight:400">({{ reviews.length }} ratings)</span>
+          <span class="badge badge-halal" style="margin-left:0.5rem">HALAL</span>
         </div>
       </div>
 
-      <div class="page">
+      <!-- Category filter tabs -->
+      <div style="background:var(--color-surface);border-bottom:1px solid var(--color-border)">
+        <div class="category-tabs" style="padding:0.6rem 1rem">
+          <button v-for="cat in availableCategories" :key="cat.value"
+            :class="['cat-tab', activeCat===cat.value?'active':'']"
+            @click="activeCat=cat.value">{{ cat.label }}</button>
+        </div>
+      </div>
+
+      <!-- Menu grid -->
+      <div style="padding:1rem">
         <template v-for="cat in menuCategories" :key="cat">
-          <div v-if="groupedMenu[cat]?.length">
-            <div class="section-title">{{ catLabel(cat) }}</div>
-            <div v-for="item in groupedMenu[cat]" :key="item.id" class="menu-item">
-              <div class="menu-item-img">{{ itemEmoji(item.category) }}</div>
-              <div class="menu-item-info">
-                <div class="menu-item-name">{{ item.name }}</div>
-                <div v-if="item.description" class="menu-item-desc">{{ item.description }}</div>
-                <div class="menu-item-price">RM {{ Number(item.price).toFixed(2) }}</div>
+          <div v-if="visibleItems(cat).length">
+            <div class="section-title" style="padding:0;margin-bottom:0.75rem">{{ catLabel(cat).toUpperCase() }} DISHES</div>
+            <div class="menu-grid" style="margin-bottom:1.25rem">
+              <div v-for="item in visibleItems(cat)" :key="item.id" class="menu-grid-card">
+                <div :class="['menu-grid-img', !item.inStock?'out-of-stock':'']">
+                  {{ itemEmoji(item.category) }}
+                  <span v-if="!item.inStock" class="menu-grid-oos">OUT OF STOCK</span>
+                </div>
+                <div class="menu-grid-body">
+                  <div class="menu-grid-name">{{ item.name }}</div>
+                  <div class="menu-grid-price">RM {{ Number(item.price).toFixed(2) }}</div>
+                </div>
+                <button v-if="item.inStock && vendor.isOpen" class="menu-grid-add" @click="addToCart(item)">+</button>
               </div>
-              <button v-if="item.inStock && vendor.isOpen"
-                class="btn btn-primary btn-sm" @click="addToCart(item)">Add</button>
-              <span v-else class="badge badge-inactive" style="font-size:0.7rem">{{ !vendor.isOpen ? 'Closed' : 'Sold Out' }}</span>
             </div>
           </div>
         </template>
 
         <!-- Reviews -->
-        <div class="section-title">Reviews</div>
-        <div v-if="!reviews.length" class="empty"><p>No reviews yet.</p></div>
-        <div v-for="r in reviews" :key="r.id" class="order-card" style="margin-bottom:0.6rem">
-          <div style="display:flex;justify-content:space-between">
+        <div class="section-title" style="padding:0">REVIEWS</div>
+        <div v-if="!reviews.length" class="empty" style="padding:1.5rem"><p>No reviews yet.</p></div>
+        <div v-for="r in reviews" :key="r.id" class="order-card" style="margin-bottom:0.5rem">
+          <div style="display:flex;justify-content:space-between;align-items:center">
             <span style="font-weight:700;font-size:0.88rem">{{ r.userName || 'Student' }}</span>
-            <span style="color:#d97706">{{ '⭐'.repeat(r.rating) }}</span>
+            <span style="color:#d97706;font-size:0.9rem">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5-r.rating) }}</span>
           </div>
-          <p style="font-size:0.82rem;color:var(--color-muted);margin-top:0.25rem">{{ r.comment }}</p>
+          <p v-if="r.comment" style="font-size:0.82rem;color:var(--color-muted);margin-top:0.3rem">{{ r.comment }}</p>
+          <p style="font-size:0.72rem;color:var(--color-muted);margin-top:0.2rem">{{ formatDate(r.createdAt) }}</p>
         </div>
       </div>
     </template>
 
-    <!-- Bottom nav -->
     <nav class="bottom-nav">
       <router-link to="/" class="bottom-nav-item">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -63,9 +80,13 @@
       </router-link>
     </nav>
 
-    <!-- FAB cart -->
-    <router-link v-if="cart.itemCount" to="/cart" class="fab">
-      🛒 Cart ({{ cart.itemCount }}) — RM {{ cart.total.toFixed(2) }}
+    <!-- View Cart FAB -->
+    <router-link v-if="cart.itemCount" to="/cart" class="view-cart-fab">
+      <div class="view-cart-fab-left">
+        <span class="view-cart-count">{{ cart.itemCount }}</span>
+        <span>View Cart</span>
+      </div>
+      <span>RM {{ cart.total.toFixed(2) }}</span>
     </router-link>
   </div>
 </template>
@@ -82,31 +103,26 @@ const vendor  = ref(null)
 const menu    = ref([])
 const reviews = ref([])
 const loading = ref(true)
+const activeCat = ref('all')
 
 const menuCategories = ['rice','noodles','drinks','snacks','other']
-const groupedMenu = computed(() => {
-  const g = {}
-  for (const cat of menuCategories) g[cat] = menu.value.filter(i => i.category === cat)
-  return g
+
+const availableCategories = computed(() => {
+  const cats = new Set(menu.value.map(i => i.category))
+  const all = [{ value: 'all', label: 'All' }, { value: 'rice', label: 'Rice' }, { value: 'noodles', label: 'Noodles' }, { value: 'drinks', label: 'Drinks' }, { value: 'snacks', label: 'Snacks' }]
+  return all.filter(c => c.value === 'all' || cats.has(c.value))
 })
 
-function catLabel(c) {
-  return { rice:'Rice', noodles:'Noodles', drinks:'Drinks', snacks:'Snacks', other:'Other' }[c] || c
-}
-function vendorEmoji(name) {
-  const n = (name||'').toLowerCase()
-  if (n.includes('minuman') || n.includes('drink')) return '🥤'
-  if (n.includes('nasi') || n.includes('rice'))     return '🍚'
-  if (n.includes('mee')  || n.includes('noodle'))   return '🍜'
-  return '🍽️'
-}
-function itemEmoji(cat) {
-  return { rice:'🍚', noodles:'🍜', drinks:'🥤', snacks:'🍡', other:'🍽️' }[cat] || '🍽️'
+function visibleItems(cat) {
+  if (activeCat.value !== 'all' && activeCat.value !== cat) return []
+  return menu.value.filter(i => i.category === cat)
 }
 
-function addToCart(item) {
-  cart.addItem(item, vendor.value)
-}
+function catLabel(c) { return { rice:'Rice', noodles:'Noodles', drinks:'Drinks', snacks:'Snacks', other:'Other' }[c] || c }
+function itemEmoji(cat) { return { rice:'🍚', noodles:'🍜', drinks:'🥤', snacks:'🍡', other:'🍽️' }[cat] || '🍽️' }
+function formatDate(d) { return new Date(d).toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' }) }
+
+function addToCart(item) { cart.addItem(item, vendor.value) }
 
 onMounted(async () => {
   const id = route.params.id

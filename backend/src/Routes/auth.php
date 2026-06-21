@@ -53,9 +53,29 @@ $app->post('/api/auth/register', function (Request $req, Response $res) {
     }
 
     $hash = password_hash($pass, PASSWORD_BCRYPT);
-    $ins  = $db->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-    $ins->execute([$name, $email, $hash, $role]);
-    $id   = (int) $db->lastInsertId();
+
+    $db->beginTransaction();
+    try {
+        $ins = $db->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
+        $ins->execute([$name, $email, $hash, $role]);
+        $id = (int) $db->lastInsertId();
+
+        // When registering as a vendor, create the vendor profile row immediately.
+        // Status starts as 'pending' so the admin must approve before the stall goes live.
+        // This ensures every vendor has a unique vendors record and existing vendors are never affected.
+        if ($role === 'vendor') {
+            $vins = $db->prepare(
+                'INSERT INTO vendors (owner_id, name, location, opening_hours, is_active, is_open, status)
+                 VALUES (?, ?, ?, ?, 0, 0, \'pending\')'
+            );
+            $vins->execute([$id, $name . '\'s Stall', 'TBD', 'TBD']);
+        }
+
+        $db->commit();
+    } catch (\Throwable $e) {
+        $db->rollBack();
+        return jsonResponse($res, ['error' => 'Registration failed. Please try again.'], 500);
+    }
 
     $user = ['id' => $id, 'name' => $name, 'email' => $email, 'role' => $role, 'created_at' => date('Y-m-d H:i:s')];
     return jsonResponse($res, ['token' => makeToken($id, $role), 'user' => userRow($user)], 201);

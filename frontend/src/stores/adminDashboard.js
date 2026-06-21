@@ -36,6 +36,11 @@ export const useAdminDashboardStore = defineStore('adminDashboard', () => {
     await fetchDisputes()
   }
 
+  async function refundDispute(id, resolution) {
+    await axios.patch(`${API}/disputes/${id}/resolve`, { resolution, refunded: true })
+    await fetchDisputes()
+  }
+
   return { analytics, vendors, disputes, loading,
-    fetchAnalytics, fetchVendors, updateVendorStatus, fetchDisputes, resolveDispute }
+    fetchAnalytics, fetchVendors, updateVendorStatus, fetchDisputes, resolveDispute, refundDispute }
 })

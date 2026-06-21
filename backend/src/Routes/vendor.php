@@ -32,34 +32,52 @@ $app->post('/api/vendors', function (Request $req, Response $res) {
 
 // ── PUT /api/vendors/{id} ─────────────────────────────────────────────────────
 $app->put('/api/vendors/{id}', function (Request $req, Response $res, array $args) {
-    $body  = (array) $req->getParsedBody();
-    $db    = getDB();
-    $id    = (int) $args['id'];
-    $upd   = $db->prepare('UPDATE vendors SET name=?, location=?, opening_hours=?, image_url=? WHERE id=?');
+    $body   = (array) $req->getParsedBody();
+    $db     = getDB();
+    $id     = (int) $args['id'];
+    $userId = (int) $req->getAttribute('userId');
+
+    // Verify ownership — only the vendor's own stall can be updated
+    $own = $db->prepare('SELECT id FROM vendors WHERE id = ? AND owner_id = ?');
+    $own->execute([$id, $userId]);
+    if (!$own->fetch()) return jsonResponse($res, ['error' => 'Vendor not found or access denied'], 403);
+
+    $upd = $db->prepare('UPDATE vendors SET name=?, location=?, opening_hours=?, image_url=? WHERE id=?');
     $upd->execute([$body['name'] ?? '', $body['location'] ?? '', $body['openingHours'] ?? '', $body['imageUrl'] ?? null, $id]);
-    $stmt  = $db->prepare('SELECT * FROM vendors WHERE id=?'); $stmt->execute([$id]);
+
+    $stmt = $db->prepare('SELECT * FROM vendors WHERE id=?'); $stmt->execute([$id]);
     $v = $stmt->fetch();
-    return jsonResponse($res, ['id' => (int)$v['id'], 'ownerId' => (int)$v['owner_id'], 'ownerName' => null,
+    return jsonResponse($res, [
+        'id' => (int)$v['id'], 'ownerId' => (int)$v['owner_id'], 'ownerName' => null,
         'name' => $v['name'], 'location' => $v['location'], 'openingHours' => $v['opening_hours'],
         'imageUrl' => $v['image_url'], 'isActive' => (bool)$v['is_active'], 'isOpen' => (bool)$v['is_open'],
-        'status' => $v['status'], 'rating' => null, 'totalOrders' => 0, 'createdAt' => $v['created_at']]);
+        'status' => $v['status'], 'rating' => null, 'totalOrders' => 0, 'createdAt' => $v['created_at'],
+    ]);
 })->add(new AuthMiddleware());
 
 // ── PATCH /api/vendors/{id}/toggle-open ───────────────────────────────────────
 $app->patch('/api/vendors/{id}/toggle-open', function (Request $req, Response $res, array $args) {
-    $db   = getDB();
-    $id   = (int) $args['id'];
-    $cur  = $db->prepare('SELECT is_open FROM vendors WHERE id=?'); $cur->execute([$id]);
-    $row  = $cur->fetch();
-    if (!$row) return jsonResponse($res, ['error' => 'Vendor not found'], 404);
+    $db     = getDB();
+    $id     = (int) $args['id'];
+    $userId = (int) $req->getAttribute('userId');
+
+    // Verify ownership
+    $cur = $db->prepare('SELECT is_open FROM vendors WHERE id = ? AND owner_id = ?');
+    $cur->execute([$id, $userId]);
+    $row = $cur->fetch();
+    if (!$row) return jsonResponse($res, ['error' => 'Vendor not found or access denied'], 403);
+
     $next = $row['is_open'] ? 0 : 1;
     $db->prepare('UPDATE vendors SET is_open=? WHERE id=?')->execute([$next, $id]);
+
     $stmt = $db->prepare('SELECT * FROM vendors WHERE id=?'); $stmt->execute([$id]);
     $v    = $stmt->fetch();
-    return jsonResponse($res, ['id' => (int)$v['id'], 'ownerId' => (int)$v['owner_id'], 'ownerName' => null,
+    return jsonResponse($res, [
+        'id' => (int)$v['id'], 'ownerId' => (int)$v['owner_id'], 'ownerName' => null,
         'name' => $v['name'], 'location' => $v['location'], 'openingHours' => $v['opening_hours'],
         'imageUrl' => $v['image_url'], 'isActive' => (bool)$v['is_active'], 'isOpen' => (bool)$v['is_open'],
-        'status' => $v['status'], 'rating' => null, 'totalOrders' => 0, 'createdAt' => $v['created_at']]);
+        'status' => $v['status'], 'rating' => null, 'totalOrders' => 0, 'createdAt' => $v['created_at'],
+    ]);
 })->add(new AuthMiddleware());
 
 // ── PATCH /api/orders/{id}/status ─────────────────────────────────────────────
@@ -88,21 +106,28 @@ $app->patch('/api/orders/{id}/status', function (Request $req, Response $res, ar
 
 // ── POST /api/vendors/{id}/menu ───────────────────────────────────────────────
 $app->post('/api/vendors/{id}/menu', function (Request $req, Response $res, array $args) {
-    $body = (array) $req->getParsedBody();
-    $name = trim($body['name'] ?? '');
-    $price = (float) ($body['price'] ?? 0);
-
-    // FIX: use ?: so empty string falls back to 'other' (not just null)
-    $validCats = ['rice', 'noodles', 'drinks', 'snacks', 'other'];
-    $cat = in_array($body['category'] ?? '', $validCats) ? $body['category'] : 'other';
+    $body     = (array) $req->getParsedBody();
+    $name     = trim($body['name'] ?? '');
+    $price    = (float) ($body['price'] ?? 0);
+    $vendorId = (int) $args['id'];
+    $userId   = (int) $req->getAttribute('userId');
 
     if (!$name || $price <= 0) return jsonResponse($res, ['error' => 'name and a positive price required'], 400);
 
-    $db       = getDB();
-    $vendorId = (int) $args['id'];
-    $ins      = $db->prepare('INSERT INTO menu_items (vendor_id, name, description, price, category, image_url, in_stock) VALUES (?,?,?,?,?,?,1)');
+    $validCats = ['rice', 'noodles', 'drinks', 'snacks', 'other'];
+    $cat = in_array($body['category'] ?? '', $validCats) ? $body['category'] : 'other';
+
+    $db = getDB();
+
+    // Verify ownership — only the stall owner can add menu items
+    $own = $db->prepare('SELECT id FROM vendors WHERE id = ? AND owner_id = ?');
+    $own->execute([$vendorId, $userId]);
+    if (!$own->fetch()) return jsonResponse($res, ['error' => 'Vendor not found or access denied'], 403);
+
+    $ins = $db->prepare('INSERT INTO menu_items (vendor_id, name, description, price, category, image_url, in_stock) VALUES (?,?,?,?,?,?,1)');
     $ins->execute([$vendorId, $name, $body['description'] ?? null, number_format($price, 2, '.', ''), $cat, $body['imageUrl'] ?? null]);
-    $id       = (int) $db->lastInsertId();
+    $id = (int) $db->lastInsertId();
+
     return jsonResponse($res, [
         'id' => $id, 'vendorId' => $vendorId, 'name' => $name,
         'description' => $body['description'] ?? null,
@@ -114,9 +139,17 @@ $app->post('/api/vendors/{id}/menu', function (Request $req, Response $res, arra
 
 // ── PUT /api/menu-items/{id} ──────────────────────────────────────────────────
 $app->put('/api/menu-items/{id}', function (Request $req, Response $res, array $args) {
-    $body = (array) $req->getParsedBody();
-    $db   = getDB();
-    $id   = (int) $args['id'];
+    $body   = (array) $req->getParsedBody();
+    $db     = getDB();
+    $id     = (int) $args['id'];
+    $userId = (int) $req->getAttribute('userId');
+
+    // Verify ownership via join through the vendors table
+    $own = $db->prepare(
+        'SELECT m.id FROM menu_items m JOIN vendors v ON v.id = m.vendor_id WHERE m.id = ? AND v.owner_id = ?'
+    );
+    $own->execute([$id, $userId]);
+    if (!$own->fetch()) return jsonResponse($res, ['error' => 'Menu item not found or access denied'], 403);
 
     $validCats = ['rice', 'noodles', 'drinks', 'snacks', 'other'];
     $fields = []; $vals = [];
@@ -127,7 +160,7 @@ $app->put('/api/menu-items/{id}', function (Request $req, Response $res, array $
                                        $fields[] = 'category=?';    $vals[] = $body['category']; }
     if (isset($body['imageUrl']))    { $fields[] = 'image_url=?';   $vals[] = $body['imageUrl']; }
     if (isset($body['inStock']))     { $fields[] = 'in_stock=?';    $vals[] = $body['inStock'] ? 1 : 0; }
-    if (isset($body['isAvailable'])) { $fields[] = 'in_stock=?';   $vals[] = $body['isAvailable'] ? 1 : 0; }
+    if (isset($body['isAvailable'])) { $fields[] = 'in_stock=?';    $vals[] = $body['isAvailable'] ? 1 : 0; }
 
     if ($fields) { $vals[] = $id; $db->prepare('UPDATE menu_items SET '.implode(',', $fields).' WHERE id=?')->execute($vals); }
 
@@ -143,25 +176,70 @@ $app->put('/api/menu-items/{id}', function (Request $req, Response $res, array $
 
 // ── DELETE /api/menu-items/{id} ───────────────────────────────────────────────
 $app->delete('/api/menu-items/{id}', function (Request $req, Response $res, array $args) {
-    getDB()->prepare('DELETE FROM menu_items WHERE id=?')->execute([(int)$args['id']]);
+    $db     = getDB();
+    $id     = (int) $args['id'];
+    $userId = (int) $req->getAttribute('userId');
+
+    // Verify ownership via join through the vendors table
+    $own = $db->prepare(
+        'SELECT m.id FROM menu_items m JOIN vendors v ON v.id = m.vendor_id WHERE m.id = ? AND v.owner_id = ?'
+    );
+    $own->execute([$id, $userId]);
+    if (!$own->fetch()) return jsonResponse($res, ['error' => 'Menu item not found or access denied'], 403);
+
+    $db->prepare('DELETE FROM menu_items WHERE id=?')->execute([$id]);
     return $res->withStatus(204);
 })->add(new AuthMiddleware());
 
 // ── PATCH /api/menu-items/{id}/stock ─────────────────────────────────────────
 $app->patch('/api/menu-items/{id}/stock', function (Request $req, Response $res, array $args) {
-    $db  = getDB();
-    $id  = (int) $args['id'];
-    $cur = $db->prepare('SELECT * FROM menu_items WHERE id=?'); $cur->execute([$id]);
-    $i   = $cur->fetch();
-    if (!$i) return jsonResponse($res, ['error' => 'Not found'], 404);
+    $db     = getDB();
+    $id     = (int) $args['id'];
+    $userId = (int) $req->getAttribute('userId');
+
+    // Verify ownership
+    $own = $db->prepare(
+        'SELECT m.id, m.in_stock FROM menu_items m JOIN vendors v ON v.id = m.vendor_id WHERE m.id = ? AND v.owner_id = ?'
+    );
+    $own->execute([$id, $userId]);
+    $i = $own->fetch();
+    if (!$i) return jsonResponse($res, ['error' => 'Menu item not found or access denied'], 403);
+
     $newStock = $i['in_stock'] ? 0 : 1;
     $db->prepare('UPDATE menu_items SET in_stock=? WHERE id=?')->execute([$newStock, $id]);
-    $cur2 = $db->prepare('SELECT * FROM menu_items WHERE id=?'); $cur2->execute([$id]);
-    $i    = $cur2->fetch();
+
+    $cur = $db->prepare('SELECT * FROM menu_items WHERE id=?'); $cur->execute([$id]);
+    $i   = $cur->fetch();
     return jsonResponse($res, [
         'id' => (int)$i['id'], 'vendorId' => (int)$i['vendor_id'], 'name' => $i['name'],
         'description' => $i['description'], 'price' => (float)$i['price'], 'category' => $i['category'],
         'imageUrl' => $i['image_url'], 'inStock' => (bool)$i['in_stock'], 'isAvailable' => (bool)$i['in_stock'],
+    ]);
+})->add(new AuthMiddleware());
+// ── GET /api/vendor/me ────────────────────────────────────────────────────────
+$app->get('/api/vendor/me', function (Request $req, Response $res) {
+    $db     = getDB();
+    $userId = (int) $req->getAttribute('userId');
+    $stmt   = $db->prepare(
+        'SELECT v.*, u.name AS owner_name FROM vendors v
+         JOIN users u ON u.id = v.owner_id
+         WHERE v.owner_id = ?'
+    );
+    $stmt->execute([$userId]);
+    $v = $stmt->fetch();
+    if (!$v) return jsonResponse($res, ['error' => 'Vendor profile not found'], 404);
+    return jsonResponse($res, [
+        'id'           => (int)$v['id'],
+        'ownerId'      => (int)$v['owner_id'],
+        'ownerName'    => $v['owner_name'],
+        'name'         => $v['name'],
+        'location'     => $v['location'],
+        'openingHours' => $v['opening_hours'],
+        'imageUrl'     => $v['image_url'],
+        'isActive'     => (bool)$v['is_active'],
+        'isOpen'       => (bool)$v['is_open'],
+        'status'       => $v['status'],
+        'createdAt'    => $v['created_at'],
     ]);
 })->add(new AuthMiddleware());
 
@@ -190,7 +268,6 @@ $app->get('/api/vendor/dashboard', function (Request $req, Response $res) {
     $r   = $db->prepare('SELECT AVG(rating) AS avg FROM reviews WHERE vendor_id=?'); $r->execute([$vendorId]);
     $avg = $r->fetch()['avg'];
 
-    // FIX: use anonymous function instead of named function to avoid "Cannot redeclare" fatal error
     $enrichOrder = function (array $o) use ($db): array {
         $items = $db->prepare('SELECT * FROM order_items WHERE order_id=?'); $items->execute([(int)$o['id']]);
         $u     = $db->prepare('SELECT name FROM users WHERE id=?');          $u->execute([(int)$o['user_id']]);

@@ -5,12 +5,12 @@ import axios from 'axios'
 const API = '/api'
 
 export const useVendorOrdersStore = defineStore('vendorOrders', () => {
-  const dashboard   = ref(null)
-  const orders      = ref([])
-  const myVendor    = ref(null)
-  const menuItems   = ref([])
-  const loading     = ref(false)
-  let   pollTimer   = null
+  const dashboard = ref(null)
+  const orders    = ref([])
+  const myVendor  = ref(null)
+  const menuItems = ref([])
+  const loading   = ref(false)
+  let   pollTimer = null
 
   async function fetchDashboard() {
     try {
@@ -24,13 +24,15 @@ export const useVendorOrdersStore = defineStore('vendorOrders', () => {
     orders.value = data
   }
 
-  async function fetchMyVendor(userId) {
+  // Fixed: calls /api/vendor/me using the vendor's own JWT — no userId arg needed
+  async function fetchMyVendor() {
     try {
-      const { data } = await axios.get(`${API}/admin/vendors`)
-      myVendor.value = data.find(v => v.ownerId === userId) || null
+      const { data } = await axios.get(`${API}/vendor/me`)
+      // Only populate myVendor when the account is approved
+      // Pending/inactive vendors stay null → dashboard shows the pending approval screen
+      myVendor.value = data.isActive ? data : null
     } catch {
-      const { data } = await axios.get(`${API}/vendors`)
-      myVendor.value = data[0] || null
+      myVendor.value = null
     }
   }
 

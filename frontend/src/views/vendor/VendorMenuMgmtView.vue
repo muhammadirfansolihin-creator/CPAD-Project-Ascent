@@ -1,46 +1,79 @@
 <template>
   <div>
     <nav class="navbar">
-      <span class="navbar-brand">CampusEats</span>
+      <div>
+        <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
+        <div class="navbar-subtitle" style="padding-left:1.6rem">for Vendor</div>
+      </div>
       <div class="navbar-actions">
-        <button class="btn btn-primary btn-sm" @click="openAdd">+ Add Item</button>
-        <button class="btn btn-ghost btn-sm" @click="auth.logout()">Sign Out</button>
+        <button v-if="store.myVendor" :class="['open-toggle-btn', store.myVendor.isOpen?'is-open':'']" @click="toggleOpen">
+          <span :class="store.myVendor.isOpen?'open-dot':'closed-dot'"></span>
+          {{ store.myVendor.isOpen ? 'Open' : 'Closed' }}
+        </button>
+        <button class="navbar-icon-btn">🔔</button>
+        <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
       </div>
     </nav>
 
-    <div class="page" style="padding-bottom:80px">
-      <h2 class="page-title">Menu</h2>
+    <div class="page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+        <div class="page-title" style="margin-bottom:0">Menu Items</div>
+        <button class="btn btn-primary btn-sm" @click="openAdd">+ Add Item</button>
+      </div>
+
+      <!-- Category filter -->
+      <div class="category-tabs" style="padding:0;margin-bottom:1rem">
+        <button v-for="c in catFilters" :key="c.value" :class="['cat-tab', activeCat===c.value?'active':'']" @click="activeCat=c.value">{{ c.label }}</button>
+      </div>
 
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
 
       <div v-else-if="!store.menuItems.length" class="empty">
         <div class="empty-icon">🍴</div>
-        <p>No menu items yet. Add your first item!</p>
+        <p>No menu items yet.</p>
         <button class="btn btn-primary" style="margin-top:1rem" @click="openAdd">+ Add Item</button>
       </div>
 
-      <template v-else>
-        <div v-for="item in store.menuItems" :key="item.id" class="menu-item" style="position:relative">
-          <div class="menu-item-img">{{ item.emoji || '🍽️' }}</div>
-          <div class="menu-item-info">
-            <div class="menu-item-name">{{ item.name }}</div>
-            <div class="menu-item-desc">{{ item.description }}</div>
-            <div class="menu-item-price">RM {{ Number(item.price).toFixed(2) }}</div>
-            <div style="margin-top:0.3rem">
-              <span :class="['badge', item.isAvailable ? 'badge-active' : 'badge-inactive']">
-                {{ item.isAvailable ? 'In Stock' : 'Out of Stock' }}
-              </span>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:0.4rem;flex-shrink:0">
-            <button class="btn btn-ghost btn-sm" @click="toggleStock(item.id)">
-              {{ item.isAvailable ? 'Mark Out' : 'Mark In' }}
-            </button>
-            <button class="btn btn-outline btn-sm" @click="openEdit(item)">Edit</button>
-            <button class="btn btn-danger btn-sm" @click="confirmDelete(item.id)">Delete</button>
-          </div>
-        </div>
-      </template>
+      <div v-else class="card" style="overflow:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ITEM</th>
+              <th>CATEGORY</th>
+              <th>PRICE</th>
+              <th>IN STOCK</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in filteredItems" :key="item.id">
+              <td>
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <div style="width:40px;height:40px;border-radius:0.5rem;background:linear-gradient(135deg,#f0e8d8,#e8dcc8);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">{{ itemEmoji(item.category) }}</div>
+                  <div>
+                    <div style="font-weight:700;font-size:0.88rem">{{ item.name }}</div>
+                    <div style="font-size:0.72rem;color:var(--color-muted)">☪ Halal</div>
+                  </div>
+                </div>
+              </td>
+              <td><span style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:999px;padding:0.2rem 0.65rem;font-size:0.75rem;font-weight:600">{{ catLabel(item.category) }}</span></td>
+              <td style="font-weight:700;color:var(--color-primary)">RM {{ Number(item.price).toFixed(2) }}</td>
+              <td>
+                <label class="toggle-switch">
+                  <input type="checkbox" :checked="item.isAvailable" @change="toggleStock(item.id)" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </td>
+              <td>
+                <div style="display:flex;gap:0.4rem">
+                  <button class="btn btn-ghost btn-sm" style="padding:0.3rem 0.55rem" @click="openEdit(item)" title="Edit">✏️</button>
+                  <button class="btn btn-ghost btn-sm" style="padding:0.3rem 0.55rem;color:var(--color-danger)" @click="confirmDelete(item.id)" title="Delete">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Add / Edit Modal -->
@@ -54,7 +87,7 @@
           <div v-if="formError" class="alert alert-error">{{ formError }}</div>
           <div class="form-group">
             <label class="form-label">Name *</label>
-            <input v-model="form.name" class="form-control" placeholder="e.g. Nasi Lemak" />
+            <input v-model="form.name" class="form-control" placeholder="e.g. Nasi Lemak Ayam" />
           </div>
           <div class="form-group">
             <label class="form-label">Description</label>
@@ -67,7 +100,6 @@
           <div class="form-group">
             <label class="form-label">Category</label>
             <select v-model="form.category" class="form-control">
-              <option value="">Select category</option>
               <option value="rice">Rice</option>
               <option value="noodles">Noodles</option>
               <option value="drinks">Drinks</option>
@@ -75,36 +107,34 @@
               <option value="other">Other</option>
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">Emoji (optional)</label>
-            <input v-model="form.emoji" class="form-control" placeholder="🍛" maxlength="4" />
-          </div>
           <div class="form-group" style="display:flex;align-items:center;gap:0.75rem">
-            <input id="avail" v-model="form.isAvailable" type="checkbox" style="width:18px;height:18px;cursor:pointer" />
-            <label for="avail" class="form-label" style="margin:0;cursor:pointer">Available (in stock)</label>
+            <label class="toggle-switch">
+              <input type="checkbox" v-model="form.isAvailable" />
+              <span class="toggle-slider"></span>
+            </label>
+            <span style="font-size:0.88rem;font-weight:600">Available (in stock)</span>
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" @click="closeModal">Cancel</button>
           <button class="btn btn-primary" :disabled="saving" @click="save">
-            {{ saving ? 'Saving…' : (editingItem ? 'Update' : 'Add Item') }}
+            {{ saving ? 'Saving…' : (editingItem ? 'Update Item' : 'Add Item') }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Bottom nav -->
     <nav class="bottom-nav">
       <router-link to="/vendor" class="bottom-nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </router-link>
       <router-link to="/vendor/orders" class="bottom-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
         Orders
       </router-link>
-      <router-link to="/vendor/menu" class="bottom-nav-item active">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 2 5 5.5 5 9c0 3 1.5 5.5 4 7v3a1 1 0 001 1h4a1 1 0 001-1v-3c2.5-1.5 4-4 4-7 0-3.5-3-7-7-7z"/></svg>
+      <router-link to="/vendor/menu" class="bottom-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M3 10h18M5 22h14a2 2 0 002-2v-8H3v8a2 2 0 002 2z"/></svg>
         Menu
       </router-link>
     </nav>
@@ -112,88 +142,53 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVendorOrdersStore } from '@/stores/vendorOrders'
 
 const auth  = useAuthStore()
 const store = useVendorOrdersStore()
+const loading = ref(true); const showModal = ref(false); const editingItem = ref(null)
+const saving = ref(false); const formError = ref(''); const activeCat = ref('all')
 
-const loading     = ref(true)
-const showModal   = ref(false)
-const editingItem = ref(null)
-const saving      = ref(false)
-const formError   = ref('')
+const form = reactive({ name:'', description:'', price:'', category:'rice', isAvailable:true })
 
-const form = reactive({ name: '', description: '', price: '', category: '', emoji: '', isAvailable: true })
+const catFilters = [
+  { value:'all', label:'All' }, { value:'rice', label:'🍚 Rice' }, { value:'noodles', label:'🍜 Noodles' },
+  { value:'drinks', label:'🥤 Drinks' }, { value:'snacks', label:'🍡 Snacks' },
+]
 
-function resetForm() {
-  form.name = ''; form.description = ''; form.price = ''
-  form.category = ''; form.emoji = ''; form.isAvailable = true
-  formError.value = ''
-  editingItem.value = null
-}
+const filteredItems = computed(() => activeCat.value === 'all' ? store.menuItems : store.menuItems.filter(i => i.category === activeCat.value))
 
-function openAdd() { resetForm(); showModal.value = true }
+function catLabel(c) { return { rice:'Rice', noodles:'Noodles', drinks:'Drinks', snacks:'Snacks', other:'Other' }[c] || c }
+function itemEmoji(cat) { return { rice:'🍚', noodles:'🍜', drinks:'🥤', snacks:'🍡', other:'🍽️' }[cat] || '🍽️' }
 
-function openEdit(item) {
-  editingItem.value = item
-  form.name        = item.name        || ''
-  form.description = item.description || ''
-  form.price       = item.price       || ''
-  form.category    = item.category    || ''
-  form.emoji       = item.emoji       || ''
-  form.isAvailable = item.isAvailable ?? true
-  formError.value  = ''
-  showModal.value  = true
-}
-
-function closeModal() { showModal.value = false; resetForm() }
+function resetForm() { form.name=''; form.description=''; form.price=''; form.category='rice'; form.isAvailable=true; formError.value=''; editingItem.value=null }
+function openAdd() { resetForm(); showModal.value=true }
+function openEdit(item) { editingItem.value=item; form.name=item.name||''; form.description=item.description||''; form.price=item.price||''; form.category=item.category||'rice'; form.isAvailable=item.isAvailable??true; formError.value=''; showModal.value=true }
+function closeModal() { showModal.value=false; resetForm() }
 
 async function save() {
-  if (!form.name.trim()) { formError.value = 'Name is required.'; return }
-  if (!form.price || isNaN(form.price) || Number(form.price) < 0) { formError.value = 'Enter a valid price.'; return }
-
-  saving.value = true
-  formError.value = ''
+  if (!form.name.trim()) { formError.value='Name is required.'; return }
+  if (!form.price || isNaN(form.price) || Number(form.price) < 0) { formError.value='Enter a valid price.'; return }
+  saving.value=true; formError.value=''
   try {
-    const payload = {
-      name:        form.name.trim(),
-      description: form.description.trim(),
-      price:       Number(form.price),
-      category:    form.category,
-      emoji:       form.emoji.trim(),
-      isAvailable: form.isAvailable,
-    }
-    if (editingItem.value) {
-      await store.updateMenuItem(editingItem.value.id, payload)
-    } else {
-      await store.addMenuItem(store.myVendor.id, payload)
-    }
+    const payload = { name:form.name.trim(), description:form.description.trim(), price:Number(form.price), category:form.category, isAvailable:form.isAvailable }
+    if (editingItem.value) await store.updateMenuItem(editingItem.value.id, payload)
+    else await store.addMenuItem(store.myVendor.id, payload)
     closeModal()
-  } catch (e) {
-    formError.value = e?.response?.data?.message || 'Something went wrong. Please try again.'
-  } finally {
-    saving.value = false
-  }
+  } catch(e) { formError.value = e?.response?.data?.message || 'Something went wrong.' }
+  finally { saving.value=false }
 }
 
-async function toggleStock(itemId) {
-  await store.toggleStock(itemId)
-}
-
-async function confirmDelete(itemId) {
-  if (confirm('Delete this menu item? This cannot be undone.')) {
-    await store.deleteMenuItem(itemId)
-  }
-}
+async function toggleStock(itemId) { await store.toggleStock(itemId) }
+async function confirmDelete(itemId) { if (confirm('Delete this menu item?')) await store.deleteMenuItem(itemId) }
+async function toggleOpen() { if (store.myVendor) await store.toggleOpen(store.myVendor.id) }
 
 onMounted(async () => {
   try {
     if (!store.myVendor) await store.fetchMyVendor(auth.user?.id)
     if (store.myVendor) await store.fetchMenu(store.myVendor.id)
-  } finally {
-    loading.value = false
-  }
+  } finally { loading.value=false }
 })
 </script>

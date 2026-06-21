@@ -4,7 +4,7 @@ Group: Ascent | SCSM2223 Cross-Platform Application Development | Semester II 20
 
 ## Quick Start
 
-### Backend
+### Backend (First Terminal)
 ```bash
 cd backend
 composer install
@@ -13,7 +13,7 @@ composer install
 php -S localhost:8000 -t public
 ```
 
-### Frontend
+### Frontend (Second Terminal)
 ```bash
 cd frontend
 npm install
