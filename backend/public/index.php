@@ -35,5 +35,6 @@ require __DIR__ . '/../src/Routes/auth.php';
 require __DIR__ . '/../src/Routes/student.php';
 require __DIR__ . '/../src/Routes/vendor.php';
 require __DIR__ . '/../src/Routes/admin.php';
+require __DIR__ . '/../src/Routes/notifications.php';
 
 $app->run();

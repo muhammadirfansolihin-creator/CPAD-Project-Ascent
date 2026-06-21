@@ -90,6 +90,17 @@ $app->patch('/api/orders/{id}/status', function (Request $req, Response $res, ar
     $db  = getDB();
     $id  = (int) $args['id'];
     $db->prepare('UPDATE orders SET status=? WHERE id=?')->execute([$status, $id]);
+
+    // Notify the student when order status just changed
+    $ord = $db->prepare('SELECT user_id FROM orders WHERE id=?');
+    $ord->execute([$id]);
+    $orderRow = $ord->fetch();
+    if ($orderRow) {
+        $message = "Your order #{$id} status has been updated to: " . ucfirst($status);
+        $db->prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?,?,?)')
+           ->execute([(int) $orderRow['user_id'], $id, $message]);
+    }
+
     $stmt = $db->prepare('SELECT o.*, v.name AS vendor_name, u.name AS customer_name FROM orders o JOIN vendors v ON v.id=o.vendor_id JOIN users u ON u.id=o.user_id WHERE o.id=?');
     $stmt->execute([$id]);
     $o = $stmt->fetch();
