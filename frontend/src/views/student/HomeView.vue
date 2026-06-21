@@ -9,7 +9,7 @@
           🛒
           <span v-if="cart.itemCount" class="badge-dot"></span>
         </router-link>
-        <button class="navbar-icon-btn" @click="auth.logout()" title="Sign out">👤</button>
+        <router-link to="/profile" class="navbar-icon-btn">👤</router-link>
       </div>
     </nav>
 

@@ -18,19 +18,6 @@
     <div class="page">
       <div class="page-title">Live Orders</div>
 
-      <!-- Search + filter -->
-      <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;align-items:center">
-        <div class="search-bar" style="flex:1;margin:0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input v-model="search" class="form-control" placeholder="Search order ID or customer…" style="padding-left:2.5rem" />
-        </div>
-        <select v-model="dateFilter" class="form-control" style="width:auto;flex-shrink:0">
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="all">All Time</option>
-        </select>
-      </div>
-
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
 
       <template v-else>
@@ -73,6 +60,19 @@
           <div style="font-weight:800;font-size:1rem">Order History</div>
           <button class="btn btn-ghost btn-sm" @click="exportCSV">↗ Export CSV</button>
         </div>
+
+        <!-- Search + filter -->
+      <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;align-items:center">
+        <div class="search-bar" style="flex:1;margin:0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input v-model="search" class="form-control" placeholder="Search order ID or customer…" style="padding-left:2.5rem" />
+        </div>
+        <select v-model="dateFilter" class="form-control" style="width:auto;flex-shrink:0">
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
 
         <div class="card" style="overflow:auto">
           <table class="data-table">

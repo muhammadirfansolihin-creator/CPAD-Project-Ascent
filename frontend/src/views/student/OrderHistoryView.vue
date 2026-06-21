@@ -4,7 +4,7 @@
       <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
       <div class="navbar-actions">
         <router-link to="/cart" class="navbar-icon-btn">🛒<span v-if="cart.itemCount" class="badge-dot"></span></router-link>
-        <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
+        <router-link to="/profile" class="navbar-icon-btn">👤</router-link>
       </div>
     </nav>
 

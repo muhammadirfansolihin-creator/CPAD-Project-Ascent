@@ -6,6 +6,7 @@ import HomeView from '@/views/student/HomeView.vue'
 import VendorMenuView from '@/views/student/VendorMenuView.vue'
 import CartView from '@/views/student/CartView.vue'
 import OrderHistoryView from '@/views/student/OrderHistoryView.vue'
+import StudentProfile from '@/views/student/StudentProfile.vue'
 import VendorDashboardView from '@/views/vendor/VendorDashboardView.vue'
 import VendorOrdersView from '@/views/vendor/VendorOrdersView.vue'
 import VendorMenuMgmtView from '@/views/vendor/VendorMenuMgmtView.vue'
@@ -20,6 +21,7 @@ const routes = [
   { path: '/vendors/:id',   component: VendorMenuView,   meta: { role: 'student' } },
   { path: '/cart',          component: CartView,         meta: { role: 'student' } },
   { path: '/orders',        component: OrderHistoryView, meta: { role: 'student' } },
+  { path: '/profile',       component: StudentProfile,   meta: { role: 'student' } },
   // Vendor
   { path: '/vendor',        component: VendorDashboardView, meta: { role: 'vendor' } },
   { path: '/vendor/orders', component: VendorOrdersView,    meta: { role: 'vendor' } },
