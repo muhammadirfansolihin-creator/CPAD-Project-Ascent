@@ -8,7 +8,7 @@ function getDB(): PDO {
     $host   = getenv('DB_HOST') ?: 'localhost';
     $dbname = getenv('DB_NAME') ?: 'campuseats';
     $user   = getenv('DB_USER') ?: 'root';
-    $pass   = getenv('DB_PASS') ?: '';
+    $pass   = getenv('DB_PASS') ?: 'admin123';
     $port   = getenv('DB_PORT') ?: '3306';
 
     $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";

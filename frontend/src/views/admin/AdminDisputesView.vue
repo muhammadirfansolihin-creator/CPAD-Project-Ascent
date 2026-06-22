@@ -3,7 +3,24 @@
     <nav class="navbar">
       <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
       <div class="navbar-actions">
-        <button class="navbar-icon-btn">🔔</button>
+        
+        <div style="position:relative">
+          <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
+            🔔
+            <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
+          </button>
+
+          <div v-if="showNotif" class="notif-dropdown">
+            <div class="notif-dropdown-header">Notifications</div>
+            <div v-if="!notif.notifications.length" class="notif-empty">No notifications yet</div>
+            <div v-for="n in notif.notifications" :key="n.id" @click="handleNotifClick(n)"
+              :class="['notif-item', { unread: !n.isRead }]">
+              <div>{{ n.message }}</div>
+              <div class="notif-item-time">{{ n.createdAt }}</div>
+            </div>
+          </div>
+        </div>
+
         <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
       </div>
     </nav>
@@ -79,10 +96,13 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminDashboardStore } from '@/stores/adminDashboard'
+import { useNotificationStore } from '@/stores/notifications'
 
 const auth        = useAuthStore()
 const store       = useAdminDashboardStore()
 const router      = useRouter()
+const notif = useNotificationStore()
+const showNotif = ref(false)
 const loading     = ref(true)
 const filter      = ref('all')
 const resolutions = reactive({})
@@ -129,5 +149,17 @@ async function refund(id) {
 
 function viewOrder(orderId) { alert(`Viewing Order #${orderId}`) }
 
-onMounted(async () => { try { await store.fetchDisputes() } finally { loading.value = false } })
+function toggleNotif() {
+  showNotif.value = !showNotif.value
+}
+
+function handleNotifClick(n) {
+  notif.markAsRead(n.id)
+  showNotif.value = false
+}
+
+onMounted(async () => { 
+  try { await store.fetchDisputes() } finally { loading.value = false } 
+  notif.fetchNotifications()
+})
 </script>

@@ -272,6 +272,14 @@ $app->post('/api/disputes', function (Request $req, Response $res) {
     $ins->execute([$orderId, $userId, $description]);
     $id     = (int) $db->lastInsertId();
 
+    // Notify all admins about new dispute
+    $admins = $db->prepare('SELECT id FROM users WHERE role = ?');
+    $admins->execute(['admin']);
+    foreach ($admins->fetchAll() as $admin) {
+        $db->prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?,?,?)')
+        ->execute([(int) $admin['id'], $orderId, "New dispute filed for Order #{$orderId}."]);
+    }
+
     $u = $db->prepare('SELECT name FROM users WHERE id = ?'); $u->execute([$userId]);
     return jsonResponse($res, [
         'id' => $id, 'orderId' => $orderId, 'reportedBy' => $userId,

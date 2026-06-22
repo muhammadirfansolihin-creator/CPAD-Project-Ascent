@@ -69,7 +69,16 @@ $app->post('/api/auth/register', function (Request $req, Response $res) {
                  VALUES (?, ?, ?, ?, 0, 0, \'pending\')'
             );
             $vins->execute([$id, $name . '\'s Stall', 'TBD', 'TBD']);
+
+            // Notify all admins about new vendor pending approval
+            $admins = $db->prepare('SELECT id FROM users WHERE role = ?');
+            $admins->execute(['admin']);
+            foreach ($admins->fetchAll() as $admin) {
+                $db->prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?,NULL,?)')
+                ->execute([(int) $admin['id'], "New vendor '{$name}' registered and pending approval."]);
+            }
         }
+
 
         $db->commit();
     } catch (\Throwable $e) {
