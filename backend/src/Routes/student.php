@@ -179,6 +179,16 @@ $app->post('/api/orders', function (Request $req, Response $res) {
         $ii->execute([$orderId, $r['menuItemId'], $r['name'], $r['qty'], number_format($r['unitPrice'], 2, '.', '')]);
     }
 
+     // Notify the vendor owner about the new order
+    $vOwner = $db->prepare('SELECT owner_id FROM vendors WHERE id = ?');
+    $vOwner->execute([$vendorId]);
+    $vendorRow = $vOwner->fetch();
+    if ($vendorRow) {
+        $notifMsg = "New order #{$orderId} received.";
+        $db->prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?,?,?)')
+           ->execute([(int) $vendorRow['owner_id'], $orderId, $notifMsg]);
+    }
+
     $v  = $db->prepare('SELECT name FROM vendors WHERE id = ?'); $v->execute([$vendorId]);
     $cu = $db->prepare('SELECT name FROM users   WHERE id = ?'); $cu->execute([$userId]);
 
@@ -261,6 +271,14 @@ $app->post('/api/disputes', function (Request $req, Response $res) {
     $ins    = $db->prepare('INSERT INTO disputes (order_id, reported_by, description) VALUES (?,?,?)');
     $ins->execute([$orderId, $userId, $description]);
     $id     = (int) $db->lastInsertId();
+
+    // Notify all admins about new dispute
+    $admins = $db->prepare('SELECT id FROM users WHERE role = ?');
+    $admins->execute(['admin']);
+    foreach ($admins->fetchAll() as $admin) {
+        $db->prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?,?,?)')
+        ->execute([(int) $admin['id'], $orderId, "New dispute filed for Order #{$orderId}."]);
+    }
 
     $u = $db->prepare('SELECT name FROM users WHERE id = ?'); $u->execute([$userId]);
     return jsonResponse($res, [
