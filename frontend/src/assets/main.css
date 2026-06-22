@@ -227,9 +227,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   border-radius: var(--radius); color: #fff; padding: 1rem 1.25rem;
   margin: 0 1rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
 }
-.promo-banner h3 { font-size: 0.95rem; font-weight: 800; }
-.promo-banner p  { font-size: 0.78rem; opacity: 0.85; margin-top: 0.15rem; }
+.promo-banner-text-content { font-size:medium; display:flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.promo-banner-title { font-size: 1.5rem; font-weight: 800; margin: 0; padding-bottom: 1; color: #fff; }
+.promo-banner-subtitle { font-size: 1rem; opacity: 0.9; margin-top: 0.1rem; margin-bottom: 0; color: #f3f4f6; }
 .promo-btn { background: #f5c842; color: #1C1414; padding: 0.4rem 1rem; border-radius: 0.5rem; font-weight: 800; font-size: 0.8rem; border: none; cursor: pointer; white-space: nowrap; }
+.promo-banner-fallback-box {
+  background-color: #fee2e2; color: #991b1b; padding: 20px; border-radius: 
+  12px; text-align: center; font-weight: bold; border: 1px dashed #ef4444;
+}
 
 /* ── Section header row ──────────────────────────────────── */
 .section-row { display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin: 1rem 0 0.6rem; }

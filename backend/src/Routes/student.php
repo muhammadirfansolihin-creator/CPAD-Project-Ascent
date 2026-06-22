@@ -103,6 +103,33 @@ $app->get('/api/vendors/{id}/menu', function (Request $req, Response $res, array
     ], $items));
 });
 
+// ── GET /api/active-banner ───────────────────────────────────────────────────
+$app->get('/api/active-banner', function (Request $request, Response $response) {
+    
+    if (ob_get_length()) ob_clean(); // Clear any existing output buffer to prevent JSON corruption
+    $db = getDB(); 
+    
+    $sql = "SELECT title, subtitle, theme 
+            FROM dynamic_banners 
+            WHERE is_active = 1 
+              AND CURTIME() BETWEEN start_time AND end_time 
+            LIMIT 1";
+            
+    $stmt = $db->query($sql);
+    $banner = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // If no active promotion exists, return null or a clean message
+    if(!$banner){
+        return jsonResponse($res, null);
+    }
+    
+    return jsonResponse($response, [
+        'title' => $banner['title'] ?? null,
+        'subtitle' => $banner['subtitle'] ?? null,
+        'theme' => $banner['theme'] ?? null,
+    ]);
+});
+
 // ── GET /api/vendors/{id}/reviews ─────────────────────────────────────────────
 $app->get('/api/vendors/{id}/reviews', function (Request $req, Response $res, array $args) {
     $db   = getDB();
@@ -287,3 +314,4 @@ $app->post('/api/disputes', function (Request $req, Response $res) {
         'status' => 'open', 'resolution' => null, 'createdAt' => date('Y-m-d H:i:s'),
     ], 201);
 })->add(new AuthMiddleware());
+

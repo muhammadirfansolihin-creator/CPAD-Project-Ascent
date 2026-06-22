@@ -44,13 +44,15 @@
         @click="selectedCat=cat.value">{{ cat.label }}</button>
     </div>
 
-    <!-- Promo banner -->
-    <div class="promo-banner">
-      <div>
-        <h3>Lunch Rush Promo 🔥</h3>
-        <p>Order before 12:30 — skip the queue!</p>
-      </div>
+    <div v-if="banner" class="promo-banner" :class="banner.theme" :style="{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(${getBackgroundImage(banner.theme)})`, backgroundSize: 'cover', backgroundPosition: 'center'}">
+        <div class="promo-banner-text-content">
+        <h4 class="promo-banner-title">{{ banner.title }}</h4><br>
+        <p class="promo-banner-subtitle">{{ banner.subtitle }}</p>
+        </div>
       <button class="promo-btn" @click="scrollToVendors">Order Now</button>
+    </div>
+    <div v-else class="promo-banner-fallback-box">
+      <p> No active promotion</p>
     </div>
 
     <div v-if="loading" class="loading"><div class="spinner"></div></div>
@@ -146,11 +148,23 @@ import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useNotificationStore } from '@/stores/notifications'
 
+const banner = ref({ title: '', subtitle: '', theme: ''})
 const auth   = useAuthStore()
 const cart   = useCartStore()
 
 const notif  = useNotificationStore()
 const showNotif = ref(false)
+
+const backgrounds = {
+  breakfast: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?q=80&w=1200&auto=format&fit=crop',
+  dinner:    'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
+  dessert:   'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1200&auto=format&fit=crop',
+  default:   'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop'
+}
+
+function getBackgroundImage(theme) {
+  return backgrounds[theme] || backgrounds.default
+}
 
 function toggleNotif() {
   showNotif.value = !showNotif.value
@@ -201,6 +215,24 @@ const featuredItems = computed(() => {
   return []
 })
 
+async function fetchActiveBanner() {
+  try {
+    const {data} = await axios.get('/api/active-banner')
+    console.log('Active banner:', data)
+    if(data){
+      banner.value = {
+        title: data.title,
+        subtitle: data.subtitle,
+        theme: data.theme
+      }
+    } else{
+      banner.value = { title: '', subtitle: '', theme: '' }
+    }
+  } catch (error) {
+    console.error('Error fetching active banner:', error);
+  }
+}
+
 function vendorEmoji(name) {
   const n = (name || '').toLowerCase()
   if (n.includes('minuman') || n.includes('drink') || n.includes('segar') || n.includes('tebu') || n.includes('bandung')) return '🥤'
@@ -219,6 +251,7 @@ function scrollToVendors() {
 }
 
 onMounted(async () => {
+  fetchActiveBanner()
   notif.fetchNotifications()
   try {
     const { data } = await axios.get('/api/vendors')
