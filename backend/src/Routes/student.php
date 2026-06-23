@@ -338,3 +338,33 @@ $app->get('/api/profile/stats', function (Request $req, Response $res) {
         'points'     => (int) floor($spent),
     ]);
 })->add(new AuthMiddleware());
+
+// ── PUT /api/profile ──────────────────────────────────────────────────────────
+$app->put('/api/profile', function (Request $req, Response $res) {
+    $body   = (array) $req->getParsedBody();
+    $name   = trim($body['name'] ?? '');
+
+    if ($name === '') {
+        return jsonResponse($res, ['error' => 'Name is required'], 400);
+    }
+    if (mb_strlen($name) > 120) {
+        return jsonResponse($res, ['error' => 'Name must be 120 characters or less'], 400);
+    }
+
+    $db     = getDB();
+    $userId = (int) $req->getAttribute('userId');
+
+    $stmt = $db->prepare('UPDATE users SET name = ? WHERE id = ?');
+    $stmt->execute([$name, $userId]);
+
+    $fetch = $db->prepare('SELECT id, name, email, role FROM users WHERE id = ?');
+    $fetch->execute([$userId]);
+    $user = $fetch->fetch();
+
+    return jsonResponse($res, [
+        'id'    => (int) $user['id'],
+        'name'  => $user['name'],
+        'email' => $user['email'],
+        'role'  => $user['role'],
+    ]);
+})->add(new AuthMiddleware());

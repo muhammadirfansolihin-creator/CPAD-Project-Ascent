@@ -43,6 +43,11 @@ export const useAuthStore = defineStore('auth', () => {
     delete axios.defaults.headers.common['Authorization']
   }
 
+function updateUser(updatedUser) {
+  user.value = updatedUser
+  localStorage.setItem('ce_user', JSON.stringify(updatedUser))
+}
+
   initAxios()
-  return { user, token, isLoggedIn, role, login, register, logout }
+  return { user, token, isLoggedIn, role, login, register, logout, updateUser }
 })
