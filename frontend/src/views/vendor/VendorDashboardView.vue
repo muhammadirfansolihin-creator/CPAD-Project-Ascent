@@ -28,7 +28,7 @@
           </div>
         </div>
 
-        <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
+        <router-link to="/vendor/profile" class="navbar-icon-btn">👤</router-link>
       </div>
     </nav>
 

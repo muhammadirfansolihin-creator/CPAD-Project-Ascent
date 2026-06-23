@@ -10,6 +10,7 @@ import StudentProfile from '@/views/student/StudentProfile.vue'
 import VendorDashboardView from '@/views/vendor/VendorDashboardView.vue'
 import VendorOrdersView from '@/views/vendor/VendorOrdersView.vue'
 import VendorMenuMgmtView from '@/views/vendor/VendorMenuMgmtView.vue'
+import VendorProfile from '@/views/vendor/VendorProfile.vue'
 import SalesSummaryView from '@/views/admin/SalesSummaryView.vue'
 import AdminVendorsView from '@/views/admin/AdminVendorsView.vue'
 import AdminDisputesView from '@/views/admin/AdminDisputesView.vue'
@@ -28,6 +29,7 @@ const routes = [
   { path: '/vendor',        component: VendorDashboardView, meta: { role: 'vendor' } },
   { path: '/vendor/orders', component: VendorOrdersView,    meta: { role: 'vendor' } },
   { path: '/vendor/menu',   component: VendorMenuMgmtView,  meta: { role: 'vendor' } },
+  { path: '/vendor/profile', component: VendorProfile, meta: { role: 'vendor' } },
   // Admin
   { path: '/admin',           component: SalesSummaryView, meta: { role: 'admin' } },
   { path: '/admin/vendors',   component: AdminVendorsView,  meta: { role: 'admin' } },
