@@ -33,13 +33,27 @@
     </nav>
 
     <div class="page">
-      <div class="page-title">Live Orders</div>
+      
+       <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;margin-top:2rem">
+        <button
+          :class="['order-tab', activeView==='live' ? 'active' : '']"
+          @click="activeView='live'"
+          style="font-weight:700;padding:0.6rem 1.25rem">
+          Live Orders
+        </button>
+        <button
+          :class="['order-tab', activeView==='history' ? 'active' : '']"
+          @click="activeView='history'"
+          style="font-weight:700;padding:0.6rem 1.25rem">
+          Order History
+        </button>
+      </div>
 
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
 
       <template v-else>
         <!-- Kanban board -->
-        <div class="kanban">
+        <div v-if="activeView==='live'" class="kanban">
           <div v-for="col in columns" :key="col.status" class="kanban-col">
             <div class="kanban-col-header">
               <div style="display:flex;align-items:center;gap:0.4rem">
@@ -73,23 +87,31 @@
         </div>
 
         <!-- Order history table -->
+        <template v-if="activeView==='history'">
         <div style="display:flex;justify-content:space-between;align-items:center;margin:1.5rem 0 0.75rem">
           <div style="font-weight:800;font-size:1rem">Order History</div>
           <button class="btn btn-ghost btn-sm" @click="exportCSV">↗ Export CSV</button>
         </div>
 
         <!-- Search + filter -->
-      <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;align-items:center">
-        <div class="search-bar" style="flex:1;margin:0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input v-model="search" class="form-control" placeholder="Search order ID or customer…" style="padding-left:2.5rem" />
+        <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;align-items:center;flex-wrap:wrap">
+          <div class="search-bar" style="flex:1;margin:0;min-width:160px">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input v-model="search" class="form-control" placeholder="Search order ID or customer…" style="padding-left:2.5rem" />
+          </div>
+          <select v-model="dateFilter" class="form-control" style="width:auto;flex-shrink:0">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="all">All Time</option>
+          </select>
+          <select v-model="statusFilter" class="form-control" style="width:auto;flex-shrink:0">
+            <option value="all">All Status</option>
+            <option value="placed">Placed</option>
+            <option value="preparing">Preparing</option>
+            <option value="ready">Ready</option>
+            <option value="collected">Collected</option>
+          </select>
         </div>
-        <select v-model="dateFilter" class="form-control" style="width:auto;flex-shrink:0">
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="all">All Time</option>
-        </select>
-      </div>
 
         <div class="card" style="overflow:auto">
           <table class="data-table">
@@ -119,6 +141,7 @@
             </tbody>
           </table>
         </div>
+        </template> 
       </template>
     </div>
 
@@ -139,6 +162,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
@@ -149,9 +173,11 @@ const auth    = useAuthStore()
 const store   = useVendorOrdersStore()
 const notif = useNotificationStore()
 const showNotif = ref(false)
+const activeView = ref('live')
 const loading = ref(true)
 const search  = ref('')
-const dateFilter = ref('today')
+const dateFilter = ref('all')
+const statusFilter = ref('all')
 
 const columns = [
   { status:'placed',    label:'Placed',    color:'#3b82f6' },
@@ -161,19 +187,46 @@ const columns = [
 ]
 
 const allOrders = computed(() => {
-  if (!search.value) return store.orders
-  const q = search.value.toLowerCase()
-  return store.orders.filter(o => {
-    const formattedId = `#ce-${String(o.id).padStart(4, '0')}`
-    return (
-      o.customerName?.toLowerCase().includes(q) ||
-      String(o.id).includes(q) ||
-      formattedId.includes(q)
-    )
-  })
+  let orders = store.orders
+
+  // Filter by date
+  if (dateFilter.value !== 'all') {
+    const now = new Date()
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    orders = orders.filter(o => {
+      const d = new Date(o.createdAt)
+      if (dateFilter.value === 'today') return d >= startOfToday
+      if (dateFilter.value === 'week') {
+        const weekAgo = new Date(startOfToday)
+        weekAgo.setDate(weekAgo.getDate() - 6)
+        return d >= weekAgo
+      }
+      return true
+    })
+  }
+
+  // Filter by status
+  if (statusFilter.value !== 'all') {
+    orders = orders.filter(o => o.status === statusFilter.value)
+  }
+
+  // Filter by search
+  if (search.value) {
+    const q = search.value.toLowerCase()
+    orders = orders.filter(o => {
+      const formattedId = `#ce-${String(o.id).padStart(4, '0')}`
+      return (
+        o.customerName?.toLowerCase().includes(q) ||
+        String(o.id).includes(q) ||
+        formattedId.includes(q)
+      )
+    })
+  }
+
+  return orders
 })
 
-function filteredByStatus(status) { return allOrders.value.filter(o => o.status === status) }
+function filteredByStatus(status) { return store.orders.filter(o => o.status === status) }
 
 function isUrgent(order) {
   if (!order.createdAt) return false
@@ -200,7 +253,7 @@ async function toggleOpen() { if (store.myVendor) await store.toggleOpen(store.m
 
 function exportCSV() {
   const rows = [['ID','Customer','Items','Total','Pickup','Status']]
-  store.orders.forEach(o => rows.push([`#CE-${String(o.id).padStart(4,'0')}`, o.customerName, formatItems(o.items), Number(o.total||0).toFixed(2), o.pickupAt, o.status]))
+  allOrders.value.forEach(o => rows.push([`#CE-${String(o.id).padStart(4,'0')}`, o.customerName, formatItems(o.items), Number(o.total||0).toFixed(2), o.pickupAt, o.status]))
   const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
   const a = document.createElement('a'); a.href = 'data:text/csv,' + encodeURIComponent(csv); a.download = 'orders.csv'; a.click()
 }
