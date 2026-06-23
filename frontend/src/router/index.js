@@ -13,6 +13,7 @@ import VendorMenuMgmtView from '@/views/vendor/VendorMenuMgmtView.vue'
 import SalesSummaryView from '@/views/admin/SalesSummaryView.vue'
 import AdminVendorsView from '@/views/admin/AdminVendorsView.vue'
 import AdminDisputesView from '@/views/admin/AdminDisputesView.vue'
+import VendorSalesView from '@/views/admin/VendorSalesView.vue'
 
 const routes = [
   { path: '/login', component: LoginView, meta: { public: true } },
@@ -30,6 +31,7 @@ const routes = [
   { path: '/admin',           component: SalesSummaryView, meta: { role: 'admin' } },
   { path: '/admin/vendors',   component: AdminVendorsView,  meta: { role: 'admin' } },
   { path: '/admin/disputes',  component: AdminDisputesView, meta: { role: 'admin' } },
+  { path: '/admin/vendor-sales', component: VendorSalesView, meta: { role: 'admin' } },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
