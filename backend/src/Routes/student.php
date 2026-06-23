@@ -315,3 +315,26 @@ $app->post('/api/disputes', function (Request $req, Response $res) {
     ], 201);
 })->add(new AuthMiddleware());
 
+// ── GET /api/profile/stats ────────────────────────────────────────────────────
+$app->get('/api/profile/stats', function (Request $req, Response $res) {
+    $db     = getDB();
+    $userId = (int) $req->getAttribute('userId');
+
+    $stmt = $db->prepare(
+        'SELECT
+            COUNT(*) AS order_count,
+            COALESCE(SUM(CASE WHEN status = "collected" THEN total ELSE 0 END), 0) AS total_spent
+         FROM orders
+         WHERE user_id = ?'
+    );
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+
+    $spent = (float) $row['total_spent'];
+
+    return jsonResponse($res, [
+        'orderCount' => (int) $row['order_count'],
+        'totalSpent' => $spent,
+        'points'     => (int) floor($spent),
+    ]);
+})->add(new AuthMiddleware());
