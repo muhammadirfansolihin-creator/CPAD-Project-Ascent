@@ -368,3 +368,37 @@ $app->put('/api/profile', function (Request $req, Response $res) {
         'role'  => $user['role'],
     ]);
 })->add(new AuthMiddleware());
+
+// ── GET /api/profile/reviews ──────────────────────────────────────────────────
+$app->get('/api/profile/reviews', function (Request $req, Response $res) {
+    $db     = getDB();
+    $userId = (int) $req->getAttribute('userId');
+
+    $stmt = $db->prepare(
+        'SELECT r.id, r.rating, r.comment, r.created_at,
+                v.id AS vendor_id, v.name AS vendor_name,
+                (SELECT GROUP_CONCAT(oi.name SEPARATOR ", ")
+                 FROM orders o
+                 JOIN order_items oi ON oi.order_id = o.id
+                 WHERE o.user_id = r.user_id AND o.vendor_id = r.vendor_id
+                 ORDER BY o.created_at DESC
+                 LIMIT 1
+                ) AS items_ordered
+         FROM reviews r
+         JOIN vendors v ON v.id = r.vendor_id
+         WHERE r.user_id = ?
+         ORDER BY r.created_at DESC'
+    );
+    $stmt->execute([$userId]);
+    $rows = $stmt->fetchAll();
+
+    return jsonResponse($res, array_map(fn($r) => [
+        'id'           => (int) $r['id'],
+        'vendorId'     => (int) $r['vendor_id'],
+        'vendorName'   => $r['vendor_name'],
+        'rating'       => (int) $r['rating'],
+        'comment'      => $r['comment'],
+        'itemsOrdered' => $r['items_ordered'] ?? 'No items found',
+        'createdAt'    => $r['created_at'],
+    ], $rows));
+})->add(new AuthMiddleware());

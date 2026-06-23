@@ -510,3 +510,28 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   margin-bottom: 0.75rem;
 }
 .edit-profile-success { margin-top: 1rem; margin-bottom: 0; }
+
+/* ── My Reviews ──────────────────────────────────────────── */
+.my-review-summary {
+  font-size: 0.78rem; font-weight: 700; color: var(--color-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+.my-review-card { margin-bottom: 0.75rem; }
+.my-review-stars { display: flex; gap: 0.1rem; font-size: 0.85rem; flex-shrink: 0; }
+.my-review-star { line-height: 1; }
+.my-review-items {
+  font-size: 0.82rem; color: var(--color-muted);
+  margin: 0.4rem 0 0.6rem;
+}
+.my-review-comment {
+  font-size: 0.88rem; color: var(--color-text);
+  background: var(--color-bg); border-left: 3px solid var(--color-primary);
+  border-radius: 0 0.4rem 0.4rem 0;
+  padding: 0.55rem 0.75rem;
+  font-style: italic; line-height: 1.5;
+}
+.my-review-no-comment {
+  color: var(--color-muted); border-left-color: var(--color-border);
+  font-style: normal;
+}

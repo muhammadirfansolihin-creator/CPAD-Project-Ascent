@@ -26,6 +26,7 @@ const routes = [
   { path: '/orders',        component: OrderHistoryView, meta: { role: 'student' } },
   { path: '/profile',       component: StudentProfile,   meta: { role: 'student' } },
   { path: '/profile/edit',  component: () => import('@/views/student/EditProfileView.vue'), meta: { role: 'student' } },
+  { path: '/profile/reviews', component: () => import('@/views/student/MyReviewsView.vue'), meta: { role: 'student' } },
   // Vendor
   { path: '/vendor',        component: VendorDashboardView, meta: { role: 'vendor' } },
   { path: '/vendor/orders', component: VendorOrdersView,    meta: { role: 'vendor' } },
