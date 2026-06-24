@@ -3,8 +3,25 @@
     <nav class="navbar">
       <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
       <div class="navbar-actions">
-        <button class="navbar-icon-btn">🔔<span class="badge-dot"></span></button>
-        <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
+        
+        <div style="position:relative">
+          <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
+            🔔
+            <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
+          </button>
+
+          <div v-if="showNotif" class="notif-dropdown">
+            <div class="notif-dropdown-header">Notifications</div>
+            <div v-if="!notif.notifications.length" class="notif-empty">No notifications yet</div>
+            <div v-for="n in notif.notifications" :key="n.id" @click="handleNotifClick(n)"
+              :class="['notif-item', { unread: !n.isRead }]">
+              <div>{{ n.message }}</div>
+              <div class="notif-item-time">{{ n.createdAt }}</div>
+            </div>
+          </div>
+        </div> 
+
+        <router-link to="/admin/profile" class="navbar-icon-btn">👤</router-link>
       </div>
     </nav>
 
@@ -45,7 +62,7 @@
         <div class="card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
             <span>Sales by Vendor</span>
-            <a class="section-row-link" style="font-weight:600;font-size:0.8rem">See all →</a>
+            <router-link to="/admin/vendor-sales" class="section-row-link" style="font-weight:600;font-size:0.8rem">See all →</router-link>
           </div>
           <div class="card-body">
             <div v-if="!store.analytics.vendorRevenue.length" class="empty" style="padding:1rem"><p>No revenue data yet</p></div>
@@ -70,13 +87,28 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminDashboardStore } from '@/stores/adminDashboard'
+import { useNotificationStore } from '@/stores/notifications'
 
 const auth    = useAuthStore()
 const store   = useAdminDashboardStore()
 const loading = ref(true)
+const notif = useNotificationStore()
+const showNotif = ref(false)
 
 const maxRevenue = computed(() => Math.max(...(store.analytics?.vendorRevenue.map(v => v.revenue) || [1]), 1))
 function barWidth(rev) { return Math.round((rev / maxRevenue.value) * 100) }
 
-onMounted(async () => { try { await store.fetchAnalytics() } finally { loading.value = false } })
+function toggleNotif() {
+  showNotif.value = !showNotif.value
+}
+
+function handleNotifClick(n) {
+  notif.markAsRead(n.id)
+  showNotif.value = false
+}
+
+onMounted(async () => { 
+  try { await store.fetchAnalytics() } finally { loading.value = false } 
+  notif.fetchNotifications()
+})
 </script>

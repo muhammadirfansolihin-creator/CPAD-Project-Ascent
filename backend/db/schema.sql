@@ -88,12 +88,22 @@ CREATE TABLE IF NOT EXISTS disputes (
 CREATE TABLE IF NOT EXISTS notifications (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     user_id    INT NOT NULL,
-    order_id   INT NOT NULL,
+    order_id   INT NULL,
     message    TEXT NOT NULL,
     is_read    TINYINT(1) NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id)  REFERENCES users(id),
     FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+CREATE TABLE IF NOT EXISTS dynamic_banners(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    subtitle VARCHAR(150) NOT NULL,
+    theme VARCHAR(50) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    is_active TINYINT(1) DEFAULT 1
 );
 
 -- Seed demo accounts (password: password123)
@@ -123,3 +133,8 @@ INSERT IGNORE INTO menu_items (vendor_id, name, description, price, category, in
 (3, 'Milo Ais',            'Iced chocolate malt drink',                                         2.50, 'drinks',  1),
 (3, 'Cendol',              'Shaved ice with coconut milk, palm sugar and green jelly',          3.50, 'snacks',  1),
 (3, 'Air Tebu',            'Fresh sugarcane juice',                                             3.00, 'drinks',  1);
+
+INSERT IGNORE INTO dynamic_banners (title, subtitle, theme, start_time, end_time) VALUES
+('Breakfast Deal', 'Get 20% off all Nasi Lemak stalls before 10 AM!', 'breakfast', '07:00:00', '11:30:00'),
+('Lunch Rush','Free drinks for meals below RM7.50!','lunch','12:30:00','14:30:00'),
+('Dinner Dash', 'Satisfy your late-night cravings with RM3 off all dinner sets after 6 PM!','dinner','18:00:00','22:00:00');

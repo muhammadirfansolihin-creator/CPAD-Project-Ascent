@@ -29,8 +29,21 @@
       <div class="page-title">My Orders</div>
 
       <!-- Tabs -->
-      <div class="order-tabs">
-        <button v-for="t in tabs" :key="t.value" :class="['order-tab', activeTab===t.value?'active':'']" @click="activeTab=t.value">{{ t.label }}</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div class="order-tabs" style="margin:0">
+          <button v-for="t in tabs" :key="t.value"
+            :class="['order-tab', activeTab===t.value?'active':'']"
+            @click="activeTab=t.value">
+            {{ t.label }}
+          </button>
+        </div>
+
+      <!-- Filter Date -->
+        <select v-model="dateFilter" class="form-control" style="width:auto">
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="all">All Time</option>
+        </select>
       </div>
 
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
@@ -149,6 +162,7 @@ const router = useRouter()
 const orders  = ref([])
 const loading = ref(true)
 const activeTab = ref('all')
+const dateFilter = ref('all') 
 const reviewedOrders  = ref(new Set())
 const disputedOrders  = ref(new Set())
 const notif = useNotificationStore()
@@ -161,9 +175,33 @@ const tabs = [
 ]
 
 const filteredOrders = computed(() => {
-  if (activeTab.value === 'active') return orders.value.filter(o => ['placed','preparing','ready'].includes(o.status))
-  if (activeTab.value === 'completed') return orders.value.filter(o => o.status === 'collected')
-  return orders.value
+  let result = orders.value
+
+  // 1. Tab filter (sedia ada)
+  if (activeTab.value === 'active') {
+    result = result.filter(o => ['placed', 'preparing', 'ready'].includes(o.status))
+  } else if (activeTab.value === 'completed') {
+    result = result.filter(o => o.status === 'collected')
+  }
+
+  // 2. Date filter (BARU)
+  if (dateFilter.value !== 'all') {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+
+    result = result.filter(o => {
+      const created = new Date(o.createdAt)
+      if (dateFilter.value === 'today') return created >= startOfToday
+      if (dateFilter.value === 'week') {
+        const sevenDaysAgo = new Date(startOfToday)
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+        return created >= sevenDaysAgo
+      }
+      return true
+    })
+  }
+
+  return result
 })
 
 const reviewModal = reactive({ open:false, orderId:null, vendorId:null, vendorName:'', rating:0, comment:'', submitting:false, error:'' })

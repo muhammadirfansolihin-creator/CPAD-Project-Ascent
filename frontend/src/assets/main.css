@@ -227,9 +227,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   border-radius: var(--radius); color: #fff; padding: 1rem 1.25rem;
   margin: 0 1rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
 }
-.promo-banner h3 { font-size: 0.95rem; font-weight: 800; }
-.promo-banner p  { font-size: 0.78rem; opacity: 0.85; margin-top: 0.15rem; }
+.promo-banner-text-content { font-size:medium; display:flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.promo-banner-title { font-size: 1.5rem; font-weight: 800; margin: 0; padding-bottom: 1; color: #fff; }
+.promo-banner-subtitle { font-size: 1rem; opacity: 0.9; margin-top: 0.1rem; margin-bottom: 0; color: #f3f4f6; }
 .promo-btn { background: #f5c842; color: #1C1414; padding: 0.4rem 1rem; border-radius: 0.5rem; font-weight: 800; font-size: 0.8rem; border: none; cursor: pointer; white-space: nowrap; }
+.promo-banner-fallback-box {
+  background-color: #fee2e2; color: #991b1b; padding: 20px; border-radius: 
+  12px; text-align: center; font-weight: bold; border: 1px dashed #ef4444;
+}
 
 /* ── Section header row ──────────────────────────────────── */
 .section-row { display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin: 1rem 0 0.6rem; }
@@ -461,3 +466,72 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .profile-menu-label { display: flex; align-items: center; gap: 0.7rem; font-weight: 600; }
 
 .profile-logout-btn { color: var(--color-danger); border-color: var(--color-border); }
+
+/* ── Edit Profile ────────────────────────────────────────── */
+.navbar-left { display: flex; align-items: center; gap: 0.5rem; }
+.navbar-back-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.8rem; color: #fff; line-height: 1;
+  padding: 0 0.25rem; display: flex; align-items: center;
+  transition: var(--transition);
+}
+.navbar-back-btn:hover { opacity: 0.75; }
+
+.edit-profile-avatar-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.5rem;
+  padding: 1.5rem 0 1rem;
+}
+.edit-profile-avatar {
+  width: 80px; height: 80px; font-size: 2rem;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(139,26,26,0.25);
+}
+.edit-profile-avatar-label {
+  font-size: 0.78rem; color: var(--color-muted); font-weight: 600;
+}
+
+.form-control-readonly { opacity: 0.5; cursor: not-allowed; background: var(--color-bg); }
+.form-control-error { border-color: var(--color-danger) !important; }
+.form-hint { font-size: 0.75rem; color: var(--color-muted); margin-top: 0.3rem; display: block; }
+.form-error { font-size: 0.78rem; color: var(--color-danger); margin-top: 0.3rem; display: block; font-weight: 600; }
+
+.edit-profile-divider {
+  border: none; border-top: 1px solid var(--color-border);
+  margin: 0.25rem 0 1rem;
+}
+.edit-profile-section-label {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--color-muted);
+  margin-bottom: 0.75rem;
+}
+.edit-profile-success { margin-top: 1rem; margin-bottom: 0; }
+
+/* ── My Reviews ──────────────────────────────────────────── */
+.my-review-summary {
+  font-size: 0.78rem; font-weight: 700; color: var(--color-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+.my-review-card { margin-bottom: 0.75rem; }
+.my-review-stars { display: flex; gap: 0.1rem; font-size: 0.85rem; flex-shrink: 0; }
+.my-review-star { line-height: 1; }
+.my-review-items {
+  font-size: 0.82rem; color: var(--color-muted);
+  margin: 0.4rem 0 0.6rem;
+}
+.my-review-comment {
+  font-size: 0.88rem; color: var(--color-text);
+  background: var(--color-bg); border-left: 3px solid var(--color-primary);
+  border-radius: 0 0.4rem 0.4rem 0;
+  padding: 0.55rem 0.75rem;
+  font-style: italic; line-height: 1.5;
+}
+.my-review-no-comment {
+  color: var(--color-muted); border-left-color: var(--color-border);
+  font-style: normal;
+}

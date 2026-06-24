@@ -103,6 +103,33 @@ $app->get('/api/vendors/{id}/menu', function (Request $req, Response $res, array
     ], $items));
 });
 
+// ── GET /api/active-banner ───────────────────────────────────────────────────
+$app->get('/api/active-banner', function (Request $request, Response $response) {
+    
+    if (ob_get_length()) ob_clean(); // Clear any existing output buffer to prevent JSON corruption
+    $db = getDB(); 
+    
+    $sql = "SELECT title, subtitle, theme 
+            FROM dynamic_banners 
+            WHERE is_active = 1 
+              AND CURTIME() BETWEEN start_time AND end_time 
+            LIMIT 1";
+            
+    $stmt = $db->query($sql);
+    $banner = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // If no active promotion exists, return null or a clean message
+    if(!$banner){
+        return jsonResponse($res, null);
+    }
+    
+    return jsonResponse($response, [
+        'title' => $banner['title'] ?? null,
+        'subtitle' => $banner['subtitle'] ?? null,
+        'theme' => $banner['theme'] ?? null,
+    ]);
+});
+
 // ── GET /api/vendors/{id}/reviews ─────────────────────────────────────────────
 $app->get('/api/vendors/{id}/reviews', function (Request $req, Response $res, array $args) {
     $db   = getDB();
@@ -272,10 +299,106 @@ $app->post('/api/disputes', function (Request $req, Response $res) {
     $ins->execute([$orderId, $userId, $description]);
     $id     = (int) $db->lastInsertId();
 
+    // Notify all admins about new dispute
+    $admins = $db->prepare('SELECT id FROM users WHERE role = ?');
+    $admins->execute(['admin']);
+    foreach ($admins->fetchAll() as $admin) {
+        $db->prepare('INSERT INTO notifications (user_id, order_id, message) VALUES (?,?,?)')
+        ->execute([(int) $admin['id'], $orderId, "New dispute filed for Order #{$orderId}."]);
+    }
+
     $u = $db->prepare('SELECT name FROM users WHERE id = ?'); $u->execute([$userId]);
     return jsonResponse($res, [
         'id' => $id, 'orderId' => $orderId, 'reportedBy' => $userId,
         'reporterName' => $u->fetch()['name'], 'description' => $description,
         'status' => 'open', 'resolution' => null, 'createdAt' => date('Y-m-d H:i:s'),
     ], 201);
+})->add(new AuthMiddleware());
+
+// ── GET /api/profile/stats ────────────────────────────────────────────────────
+$app->get('/api/profile/stats', function (Request $req, Response $res) {
+    $db     = getDB();
+    $userId = (int) $req->getAttribute('userId');
+
+    $stmt = $db->prepare(
+        'SELECT
+            COUNT(*) AS order_count,
+            COALESCE(SUM(CASE WHEN status = "collected" THEN total ELSE 0 END), 0) AS total_spent
+         FROM orders
+         WHERE user_id = ?'
+    );
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+
+    $spent = (float) $row['total_spent'];
+
+    return jsonResponse($res, [
+        'orderCount' => (int) $row['order_count'],
+        'totalSpent' => $spent,
+        'points'     => (int) floor($spent),
+    ]);
+})->add(new AuthMiddleware());
+
+// ── PUT /api/profile ──────────────────────────────────────────────────────────
+$app->put('/api/profile', function (Request $req, Response $res) {
+    $body   = (array) $req->getParsedBody();
+    $name   = trim($body['name'] ?? '');
+
+    if ($name === '') {
+        return jsonResponse($res, ['error' => 'Name is required'], 400);
+    }
+    if (mb_strlen($name) > 120) {
+        return jsonResponse($res, ['error' => 'Name must be 120 characters or less'], 400);
+    }
+
+    $db     = getDB();
+    $userId = (int) $req->getAttribute('userId');
+
+    $stmt = $db->prepare('UPDATE users SET name = ? WHERE id = ?');
+    $stmt->execute([$name, $userId]);
+
+    $fetch = $db->prepare('SELECT id, name, email, role FROM users WHERE id = ?');
+    $fetch->execute([$userId]);
+    $user = $fetch->fetch();
+
+    return jsonResponse($res, [
+        'id'    => (int) $user['id'],
+        'name'  => $user['name'],
+        'email' => $user['email'],
+        'role'  => $user['role'],
+    ]);
+})->add(new AuthMiddleware());
+
+// ── GET /api/profile/reviews ──────────────────────────────────────────────────
+$app->get('/api/profile/reviews', function (Request $req, Response $res) {
+    $db     = getDB();
+    $userId = (int) $req->getAttribute('userId');
+
+    $stmt = $db->prepare(
+        'SELECT r.id, r.rating, r.comment, r.created_at,
+                v.id AS vendor_id, v.name AS vendor_name,
+                (SELECT GROUP_CONCAT(oi.name SEPARATOR ", ")
+                 FROM orders o
+                 JOIN order_items oi ON oi.order_id = o.id
+                 WHERE o.user_id = r.user_id AND o.vendor_id = r.vendor_id
+                 ORDER BY o.created_at DESC
+                 LIMIT 1
+                ) AS items_ordered
+         FROM reviews r
+         JOIN vendors v ON v.id = r.vendor_id
+         WHERE r.user_id = ?
+         ORDER BY r.created_at DESC'
+    );
+    $stmt->execute([$userId]);
+    $rows = $stmt->fetchAll();
+
+    return jsonResponse($res, array_map(fn($r) => [
+        'id'           => (int) $r['id'],
+        'vendorId'     => (int) $r['vendor_id'],
+        'vendorName'   => $r['vendor_name'],
+        'rating'       => (int) $r['rating'],
+        'comment'      => $r['comment'],
+        'itemsOrdered' => $r['items_ordered'] ?? 'No items found',
+        'createdAt'    => $r['created_at'],
+    ], $rows));
 })->add(new AuthMiddleware());
