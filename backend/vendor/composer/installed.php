@@ -13,7 +13,7 @@
         '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '6faccc2af7dca518b18df8af53671532d190200a',
+            'reference' => 'ca2764e1fe7b762ba25902ea1dbe2ad06e8ef660',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -33,7 +33,7 @@
           <div class="stat-label profile-stat-label">Orders</div>
         </div>
         <div class="stat-card profile-stat-card">
-          <div class="stat-value">RM {{ stats.totalSpent.toFixed(0) }}</div>
+          <div class="stat-value">RM {{ stats.totalSpent.toFixed(2) }}</div>
           <div class="stat-label profile-stat-label">Spent</div>
         </div>
         <div class="stat-card profile-stat-card">

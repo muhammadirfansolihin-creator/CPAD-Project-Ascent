@@ -21,7 +21,7 @@
           </div>
         </div> 
 
-        <button class="navbar-icon-btn" @click="auth.logout()">👤</button>
+        <router-link to="/admin/profile" class="navbar-icon-btn">👤</router-link>
       </div>
     </nav>
 
@@ -62,7 +62,7 @@
         <div class="card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
             <span>Sales by Vendor</span>
-            <a class="section-row-link" style="font-weight:600;font-size:0.8rem">See all →</a>
+            <router-link to="/admin/vendor-sales" class="section-row-link" style="font-weight:600;font-size:0.8rem">See all →</router-link>
           </div>
           <div class="card-body">
             <div v-if="!store.analytics.vendorRevenue.length" class="empty" style="padding:1rem"><p>No revenue data yet</p></div>

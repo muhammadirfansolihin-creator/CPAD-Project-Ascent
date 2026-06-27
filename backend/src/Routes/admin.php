@@ -87,9 +87,19 @@ $app->get('/api/admin/users', function (Request $req, Response $res) {
 
 // ── GET /api/admin/analytics ──────────────────────────────────────────────────
 $app->get('/api/admin/analytics', function (Request $req, Response $res) {
-    $db = getDB();
+    $db     = getDB();
+    $period = $req->getQueryParams()['period'] ?? null;
 
-    $orders    = $db->query('SELECT * FROM orders')->fetchAll();
+    $sql = 'SELECT * FROM orders';
+    if ($period === 'today') {
+        $sql .= ' WHERE DATE(created_at) = CURDATE()';
+    } elseif ($period === 'week') {
+        $sql .= ' WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+    } elseif ($period === 'month') {
+        $sql .= ' WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+    }
+
+    $orders    = $db->query($sql)->fetchAll();
     $totalRev  = array_sum(array_map(fn($o) => $o['status'] === 'collected' ? (float)$o['total'] : 0, $orders));
     $totalOrds = count($orders);
 
