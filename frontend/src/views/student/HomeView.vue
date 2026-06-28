@@ -195,7 +195,7 @@ const categories = [
 
 const visibleCategories = computed(() =>
   selectedCat.value === 'all'
-    ? [{ value: 'rice', label: 'Rice' }, { value: 'noodles', label: 'Noodles' }, { value: 'drinks', label: 'Drinks' }, { value: 'snacks', label: 'Snacks' }]
+    ? [{ value: 'rice', label: 'Rice' }, { value: 'noodles', label: 'Noodles' }, { value: 'drinks', label: 'Drinks' }, { value: 'snacks', label: 'Snacks' }, {value: 'other', label: 'Other'}]
     : []
 )
 
@@ -209,7 +209,8 @@ const vendorsByCategory = computed(() => ({
   rice:    filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍚'),
   noodles: filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍜'),
   drinks:  filteredVendors.value.filter(v => vendorEmoji(v.name) === '🥤'),
-  snacks:  filteredVendors.value.filter(() => false),
+  snacks:  filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍡'),
+  other: filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍽️')
 }))
 
 const featuredItems = computed(() => {
