@@ -240,11 +240,16 @@ function openReview(order) {
   Object.assign(reviewModal, { open:true, orderId:order.id, vendorId:order.vendorId, vendorName:order.vendorName, rating:0, comment:'', error:'', submitting:false })
 }
 function closeReview() { reviewModal.open = false }
+
 async function submitReview() {
   if (!reviewModal.rating) { reviewModal.error = 'Please select a star rating.'; return }
   reviewModal.submitting = true; reviewModal.error = ''
   try {
-    await axios.post(`/api/vendors/${reviewModal.vendorId}/reviews`, { rating: reviewModal.rating, comment: reviewModal.comment || null })
+    await axios.post(`/api/reviews`, { 
+      vendorId: reviewModal.vendorId,
+      rating: reviewModal.rating, 
+      comment: reviewModal.comment || '' 
+    })
     reviewedOrders.value = new Set([...reviewedOrders.value, reviewModal.orderId])
     closeReview()
   } catch(e) { reviewModal.error = e?.response?.data?.error || 'Failed to submit. Please try again.' }

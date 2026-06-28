@@ -20,45 +20,45 @@ export const useVendorOrdersStore = defineStore('vendorOrders', () => {
   }
 
   async function fetchOrders(vendorId) {
-    const { data } = await axios.get(`${API}/orders`, { params: { vendorId } })
+    const { data } = await axios.get(`${API}/vendor/orders`)
     orders.value = data
   }
 
   // Fixed: calls /api/vendor/me using the vendor's own JWT — no userId arg needed
   async function fetchMyVendor() {
     try {
-      const { data } = await axios.get(`${API}/vendor/me`)
+      const { data } = await axios.get(`${API}/vendor/dashboard`)
       // Only populate myVendor when the account is approved
       // Pending/inactive vendors stay null → dashboard shows the pending approval screen
-      myVendor.value = data.isActive ? data : null
+      myVendor.value = data.status === 'active' ? data : null
     } catch {
       myVendor.value = null
     }
   }
 
-  async function fetchMenu(vendorId) {
-    const { data } = await axios.get(`${API}/vendors/${vendorId}/menu`)
+  async function fetchMenu() {
+    const { data } = await axios.get(`${API}/vendor/menu`)
     menuItems.value = data
   }
 
   async function updateStatus(orderId, status) {
-    await axios.patch(`${API}/orders/${orderId}/status`, { status })
+    await axios.put(`${API}/orders/${orderId}/status`, { status })
     await fetchDashboard()
   }
 
   async function toggleOpen(vendorId) {
-    const { data } = await axios.patch(`${API}/vendors/${vendorId}/toggle-open`)
+    const { data } = await axios.put(`${API}/vendor/${vendorId}/toggle-open`)
     if (myVendor.value) myVendor.value.isOpen = data.isOpen
   }
 
   async function toggleStock(itemId) {
-    const { data } = await axios.patch(`${API}/menu-items/${itemId}/stock`)
+    const { data } = await axios.put(`${API}/menu-items/${itemId}/stock`)
     const idx = menuItems.value.findIndex(i => i.id === itemId)
     if (idx !== -1) menuItems.value[idx] = data
   }
 
   async function addMenuItem(vendorId, payload) {
-    const { data } = await axios.post(`${API}/vendors/${vendorId}/menu`, payload)
+    const { data } = await axios.post(`${API}/vendor/${vendorId}/menu`, payload)
     menuItems.value.unshift(data)
   }
 

@@ -17,7 +17,7 @@ export const useNotificationStore = defineStore('notifications', () => {
   }
 
   async function markAsRead(id) {
-    await axios.patch(`${API}/notifications/${id}/read`)
+    await axios.put(`${API}/notifications/${id}/read`)
     const n = notifications.value.find(x => x.id === id)
     if (n) n.isRead = true
   }

@@ -21,23 +21,23 @@ export const useAdminDashboardStore = defineStore('adminDashboard', () => {
   }
 
   async function updateVendorStatus(vendorId, status) {
-    await axios.patch(`${API}/vendors/${vendorId}/status`, { status })
+    await axios.put(`${API}/vendors/${vendorId}/status`, { status })
     await fetchVendors()
   }
 
   async function fetchDisputes(status) {
     const params = status ? { status } : {}
-    const { data } = await axios.get(`${API}/disputes`, { params })
+    const { data } = await axios.get(`${API}/admin/disputes`, { params })
     disputes.value = data
   }
 
   async function resolveDispute(id, resolution) {
-    await axios.patch(`${API}/disputes/${id}/resolve`, { resolution })
+    await axios.put(`${API}/disputes/${id}/resolve`, { resolution })
     await fetchDisputes()
   }
 
   async function refundDispute(id, resolution) {
-    await axios.patch(`${API}/disputes/${id}/resolve`, { resolution, refunded: true })
+    await axios.put(`${API}/disputes/${id}/resolve`, { resolution, refunded: true })
     await fetchDisputes()
   }
 

@@ -9,7 +9,7 @@
 
     <div class="admin-tabs">
       <router-link to="/admin"          class="admin-tab">Sales Summary</router-link>
-      <router-link to="/admin/vendors"  class="admin-tab">Vendors</router-link>
+      <router-link to="/admin/vendor"  class="admin-tab">Vendors</router-link>
       <router-link to="/admin/disputes" class="admin-tab">Disputes</router-link>
     </div>
 

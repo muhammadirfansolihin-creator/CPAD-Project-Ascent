@@ -103,7 +103,7 @@ function startEdit() {
 async function saveEdit() {
   saving.value = true
   try {
-    const { data } = await axios.put(`/api/vendors/${vendor.value.id}`, form.value)
+    const { data } = await axios.put(`/api/vendor/${vendor.value.id}`, form.value)
     vendor.value = data
     editing.value = false
   } finally {
@@ -118,7 +118,7 @@ function handleLogout() {
 
 onMounted(async () => {
   try {
-    const { data } = await axios.get('/api/vendor/me')
+    const { data } = await axios.get('/api/vendor/profile')
     vendor.value = data
   } finally {
     loading.value = false

@@ -6,7 +6,7 @@
         <div class="navbar-subtitle" style="padding-left:1.6rem">for Vendor</div>
       </div>
       <div class="navbar-actions">
-        <button v-if="store.myVendor" :class="['open-toggle-btn', store.myVendor.isOpen?'is-open':'']" @click="toggleOpen">
+        <button v-if="store.myVendor" :class="['open-toggle-btn', store.myVendor.isOpen?'is-open':'']" @click="toggle-open">
           <span :class="store.myVendor.isOpen?'open-dot':'closed-dot'"></span>
           {{ store.myVendor.isOpen ? 'Open' : 'Closed' }}
         </button>
@@ -154,7 +154,7 @@ const columns = [
 
 const revenue    = computed(() => (store.dashboard?.dailyRevenue ?? 0).toFixed(2))
 const totalOrders = computed(() => store.dashboard?.totalOrders ?? 0)
-const activeOrders = computed(() => store.dashboard?.activeOrders ?? 0)
+const activeOrders = computed(() => Array.isArray(store.dashboard?.activeOrders) ? store.dashboard.activeOrders.length : 0)
 const avgRating   = computed(() => store.dashboard?.avgRating ? Number(store.dashboard.avgRating).toFixed(1) : 'N/A')
 
 const localOrders = ref({})

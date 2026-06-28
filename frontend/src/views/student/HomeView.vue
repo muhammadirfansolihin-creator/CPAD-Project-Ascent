@@ -251,8 +251,8 @@ function scrollToVendors() {
 }
 
 onMounted(async () => {
-  fetchActiveBanner()
-  notif.fetchNotifications()
+  await fetchActiveBanner()
+  await notif.fetchNotifications()
   try {
     const { data } = await axios.get('/api/vendors')
     vendors.value = data
