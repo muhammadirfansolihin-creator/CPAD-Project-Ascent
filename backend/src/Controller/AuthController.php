@@ -4,15 +4,18 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Repositories\UserRepository;
+use App\Repositories\VendorRepository;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AuthController {
     private UserRepository $users;
+    private VendorRepository $vendors;
 
-    public function __construct(UserRepository $users) {
+    public function __construct(UserRepository $users, VendorRepository $vendors) {
         $this->users = $users;
+        $this->vendors = $vendors;
     }
 
     private function json(Response $res, mixed $data, int $status = 200): Response {
@@ -49,6 +52,10 @@ class AuthController {
         }
 
         $id = $this->users->create($name, $email, password_hash($pass, PASSWORD_BCRYPT), $role);
+        if ($role === 'vendor') {
+            $this->vendors->create( $id, $name, '','', null);
+            $this->vendors->updateStatus($id, 'pending');
+        }
         $user = $this->users->findById($id);
 
         return $this->json($res, ['token' => $this->makeToken($id, $role), 'user' => $this->formatUser($user)], 201);

@@ -45,8 +45,8 @@ class VendorRepository {
     }
 
     public function create(int $ownerId, string $name, string $location, string $openingHours, ?string $imageUrl): int {
-        $stmt = $this->db->prepare('INSERT INTO vendors (owner_id, name, location, opening_hours, image_url) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$ownerId, $name, $location, $openingHours, $imageUrl]);
+        $stmt = $this->db->prepare('INSERT INTO vendors (owner_id, name, location, opening_hours, image_url, status) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$ownerId, $name, $location, $openingHours, $imageUrl, 'pending']);
         return (int)$this->db->lastInsertId();
     }
 

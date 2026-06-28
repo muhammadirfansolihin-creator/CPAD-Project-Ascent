@@ -4,13 +4,15 @@ declare(strict_types=1);
 use App\Database;
 use App\Controller\AuthController;
 use App\Repositories\UserRepository;
+use App\Repositories\VendorRepository;
 use App\Middleware\AuthMiddleware;
 
 global $app;
 
 $db = Database::get();
 $userRepo = new UserRepository($db);
-$authController = new AuthController($userRepo);
+$vendorRepo = new VendorRepository($db);
+$authController = new AuthController($userRepo,$vendorRepo);
 
 $app->post('/api/auth/register', [$authController, 'register']);
 $app->post('/api/auth/login', [$authController, 'login']);

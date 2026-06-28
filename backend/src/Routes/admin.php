@@ -19,7 +19,7 @@ $adminController = new AdminController($vendorRepo, $disputeRepo, $orderRepo);
 $adminOnly = new AuthMiddleware('admin');
 
 $app->get('/api/admin/vendors', [$adminController, 'getVendors'])->add($adminOnly);
-$app->put('/api/admin/vendors/{id}/approve', [$adminController, 'approveVendor'])->add($adminOnly);
+$app->put('/api/admin/vendors/{id}/status', [$adminController, 'updateVendorStatus'])->add($adminOnly);
 $app->get('/api/admin/disputes', [$adminController, 'getDisputes'])->add($adminOnly);
 $app->put('/api/disputes/{id}/resolve', [$adminController, 'resolveDispute'])->add($adminOnly);
 $app->get('/api/admin/analytics', [$adminController , 'getAnalytics'])->add($adminOnly);

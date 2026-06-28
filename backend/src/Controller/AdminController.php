@@ -63,6 +63,22 @@ class AdminController {
         ]);
     }
 
+    public function updateVendorStatus(Request $req, Response $res, array $args): Response{
+        $id = (int)$args['id'];
+
+        $body = (array)$req->getParsedBody();
+
+        $status = $body['status'] ?? '';
+
+        if (!in_array($status, ['pending', 'active', 'inactive'])) {
+            return $this->json($res, ['error' => 'Invalid status'], 400);
+        }
+
+        $this->vendors->updateStatus($id, $status);
+
+        return $this->json($res, ['success' => true]);
+    }
+    
     public function getDisputes(Request $req, Response $res): Response {
         return $this->json($res, array_map(fn($d) => [
             'id'           => (int)$d['id'],

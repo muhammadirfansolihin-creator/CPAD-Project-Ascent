@@ -17,11 +17,12 @@ export const useAdminDashboardStore = defineStore('adminDashboard', () => {
 
   async function fetchVendors() {
     const { data } = await axios.get(`${API}/admin/vendors`)
+    console.log(data)
     vendors.value = data
   }
 
   async function updateVendorStatus(vendorId, status) {
-    await axios.put(`${API}/vendors/${vendorId}/status`, { status })
+    await axios.put(`${API}/admin/vendors/${vendorId}/status`, { status })
     await fetchVendors()
   }
 
