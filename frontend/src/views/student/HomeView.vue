@@ -72,7 +72,9 @@
           :to="`/vendors/${item.vendorId}`"
           class="vendor-card"
         >
-          <div class="vendor-card-img">{{ itemEmoji(item.category) }}</div>
+          <div class="vendor-card-img" :style="(item.imageUrl || foodImage(item.name)) ? `background-image:url('${item.imageUrl || foodImage(item.name)}');background-size:cover;background-position:center;` : ''">
+            <span v-if="!item.imageUrl && !foodImage(item.name)">{{ itemEmoji(item.category) }}</span>
+          </div>
           <div class="vendor-card-body">
             <div class="vendor-card-name">{{ item.name }}</div>
             <div class="vendor-card-meta" style="color:var(--color-muted);font-size:0.72rem;margin-top:0.15rem">From {{ item.vendorName }}</div>
@@ -231,6 +233,19 @@ async function fetchActiveBanner() {
   } catch (error) {
     console.error('Error fetching active banner:', error);
   }
+}
+
+const FOOD_IMAGES = {
+  'kuih lapis':        '/Kuih Lapis.jpg',
+  'mee goreng mamak':  '/Mee Goreng Mamak.jpg',
+  'nasi ayam':         '/Nasi Ayam.jpg',
+  'nasi campur':       '/Nasi Campur.jpg',
+  'nasi lemak ayam':   '/Nasi Lemak Ayam.jpg',
+  'teh tarik':         '/Teh Tarik.jpg',
+}
+
+function foodImage(name) {
+  return FOOD_IMAGES[(name || '').toLowerCase().trim()] || null
 }
 
 function vendorEmoji(name) {
