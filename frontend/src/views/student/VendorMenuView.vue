@@ -41,8 +41,7 @@
             <div class="section-title" style="padding:0;margin-bottom:0.75rem">{{ catLabel(cat).toUpperCase() }} DISHES</div>
             <div class="menu-grid" style="margin-bottom:1.25rem">
               <div v-for="item in visibleItems(cat)" :key="item.id" class="menu-grid-card">
-                <div :class="['menu-grid-img', !item.inStock?'out-of-stock':'']">
-                  {{ itemEmoji(item.category) }}
+                <div :class="['menu-grid-img', !item.inStock?'out-of-stock':'']" :style="{backgroundImage: `url(${foodImage(item.category)})`, backgroundSize: 'cover', backgroundPosition: 'center'}">
                   <span v-if="!item.inStock" class="menu-grid-oos">OUT OF STOCK</span>
                 </div>
                 <div class="menu-grid-body">
@@ -113,13 +112,24 @@ const availableCategories = computed(() => {
   return all.filter(c => c.value === 'all' || cats.has(c.value))
 })
 
+const FOOD_IMAGES = {
+  rice: '/rice.jpg',
+  noodles: '/noodles.jpg',
+  drinks: '/drinks.jpg',
+  snacks: '/snacks.jpg',
+  other: '/other.jpg'
+}
+
+function foodImage(category) {
+  return FOOD_IMAGES[category] || FOOD_IMAGES.other
+}
+
 function visibleItems(cat) {
   if (activeCat.value !== 'all' && activeCat.value !== cat) return []
   return menu.value.filter(i => i.category === cat)
 }
 
 function catLabel(c) { return { rice:'Rice', noodles:'Noodles', drinks:'Drinks', snacks:'Snacks', other:'Other' }[c] || c }
-function itemEmoji(cat) { return { rice:'🍚', noodles:'🍜', drinks:'🥤', snacks:'🍡', other:'🍽️' }[cat] || '🍽️' }
 function formatDate(d) { return new Date(d).toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' }) }
 
 function addToCart(item) { cart.addItem(item, vendor.value) }

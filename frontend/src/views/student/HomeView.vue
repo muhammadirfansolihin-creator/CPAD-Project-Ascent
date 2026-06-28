@@ -72,8 +72,8 @@
           :to="`/vendors/${item.vendorId}`"
           class="vendor-card"
         >
-          <div class="vendor-card-img" :style="(item.imageUrl || foodImage(item.name)) ? `background-image:url('${item.imageUrl || foodImage(item.name)}');background-size:cover;background-position:center;` : ''">
-            <span v-if="!item.imageUrl && !foodImage(item.name)">{{ itemEmoji(item.category) }}</span>
+          <div class="vendor-card-img" :style="(item.imageUrl || foodImage(item.category)) ? `background-image:url('${item.imageUrl || foodImage(item.category)}');background-size:cover;background-position:center;` : ''">
+            <span v-if="!item.imageUrl && !foodImage(item.category)">{{ itemEmoji(item.category) }}</span>
           </div>
           <div class="vendor-card-body">
             <div class="vendor-card-name">{{ item.name }}</div>
@@ -94,7 +94,7 @@
         </div>
         <div v-if="vendorsByCategory[cat.value]?.length" class="horizontal-scroll">
           <router-link v-for="v in vendorsByCategory[cat.value]" :key="cat.value+v.id" :to="`/vendors/${v.id}`" class="vendor-card">
-            <div class="vendor-card-img">{{ vendorEmoji(v.name) }}</div>
+            <div class="vendor-card-img" :style="{ backgroundImage: `url(${vendorImage(v.id)})`, backgroundSize: 'cover', backgroundPosition: 'center'}"></div>
             <div class="vendor-card-body">
               <div class="vendor-card-name">{{ v.name }}</div>
               <div class="vendor-card-rating">
@@ -236,16 +236,25 @@ async function fetchActiveBanner() {
 }
 
 const FOOD_IMAGES = {
-  'kuih lapis':        '/Kuih Lapis.jpg',
-  'mee goreng mamak':  '/Mee Goreng Mamak.jpg',
-  'nasi ayam':         '/Nasi Ayam.jpg',
-  'nasi campur':       '/Nasi Campur.jpg',
-  'nasi lemak ayam':   '/Nasi Lemak Ayam.jpg',
-  'teh tarik':         '/Teh Tarik.jpg',
+  rice: '/rice.jpg',
+  noodles: '/noodles.jpg',
+  drinks: '/drinks.jpg',
+  snacks: '/snacks.jpg',
+  other: '/other.jpg'
 }
 
-function foodImage(name) {
-  return FOOD_IMAGES[(name || '').toLowerCase().trim()] || null
+const VENDOR_IMAGES = {
+  1: '/canteen.jpg',
+  2: '/warung.jpg',
+  3: '/drinkstall.jfif'
+}
+
+function vendorImage(id) {
+  return VENDOR_IMAGES[id] || ''
+}
+
+function foodImage(category) {
+  return FOOD_IMAGES[(category|| '').toLowerCase().trim()] || FOOD_IMAGES.other
 }
 
 function vendorEmoji(name) {
