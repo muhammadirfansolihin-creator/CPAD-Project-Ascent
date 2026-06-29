@@ -150,7 +150,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useNotificationStore } from '@/stores/notifications'
 
-const banner = ref({ title: '', subtitle: '', theme: ''})
+const banner = ref(null)
 const auth   = useAuthStore()
 const cart   = useCartStore()
 
@@ -229,7 +229,7 @@ async function fetchActiveBanner() {
         theme: data.theme
       }
     } else{
-      banner.value = { title: '', subtitle: '', theme: '' }
+      banner.value = null
     }
   } catch (error) {
     console.error('Error fetching active banner:', error);

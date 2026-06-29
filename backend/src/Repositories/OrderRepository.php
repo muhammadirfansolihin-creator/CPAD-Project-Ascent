@@ -170,7 +170,10 @@ class OrderRepository {
             SELECT *
             FROM dynamic_banners
             WHERE is_active = 1
-             AND CURTIME() BETWEEN start_time AND end_time
+             AND (
+             ( start_time <= end_time AND CURTIME() BETWEEN start_time AND end_time)
+             OR ( start_time > end_time AND ( CURTIME() >= start_time OR CURTIME() <= end_time)
+             )) 
             LIMIT 1
         ");
 

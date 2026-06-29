@@ -2,7 +2,7 @@
   <div>
     <nav class="navbar">
       <div>
-        <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
+        <div class="navbar-brand"><img src="/favicon.png" alt="CampusEats Logo" class="navbar-brand-icon" /> CampusEats</div>
       </div>
       <div class="navbar-actions">
         <button v-if="store.myVendor" :class="['open-toggle-btn', store.myVendor.isOpen?'is-open':'']" @click="toggleOpen">
