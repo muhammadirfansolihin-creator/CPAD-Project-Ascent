@@ -3,7 +3,6 @@
     <nav class="navbar">
       <div>
         <div class="navbar-brand"><img src="/favicon.png" alt="CampusEats Logo" class="navbar-brand-icon" /> CampusEats</div>
-        <div class="navbar-subtitle" style="padding-left:1.6rem">for Vendor</div>
       </div>
       <div class="navbar-actions">
         <button v-if="store.myVendor" :class="['open-toggle-btn', store.myVendor.isOpen?'is-open':'']" @click="toggle-open">
