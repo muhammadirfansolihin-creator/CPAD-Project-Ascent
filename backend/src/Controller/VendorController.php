@@ -163,6 +163,23 @@ class VendorController {
         ]);
     }
 
+    // Formats a raw menu_items DB row into the shape the vendor-admin
+    // frontend (VendorMenuMgmtView.vue) expects. Used by getMenu, addMenuItem,
+    // updateMenuItem, and toggleStock so the response shape is always
+    // consistent no matter which action triggered it.
+    private function formatMenuItem(array $item): array {
+        return [
+            'id'          => (int)$item['id'],
+            'vendorId'    => (int)$item['vendor_id'],
+            'name'        => $item['name'],
+            'description' => $item['description'],
+            'price'       => (float)$item['price'],
+            'category'    => $item['category'],
+            'isAvailable' => (bool)$item['in_stock'],
+            'imageUrl'    => $item['image_url']
+        ];
+    }
+
     public function getMenu(Request $req, Response $res): Response
     {
         $userId = (int)$req->getAttribute('userId');
@@ -175,18 +192,7 @@ class VendorController {
 
         $menu = $this->vendors->getMenuItems((int)$vendor['id']);
 
-        $formatted = array_map(function ($item) {
-            return [
-                'id' => (int)$item['id'],
-                'vendorId' => (int)$item['vendor_id'],
-                'name' => $item['name'],
-                'description' => $item['description'],
-                'price' => (float)$item['price'],
-                'category' => $item['category'],
-                'inStock' => (bool)$item['in_stock'],
-                'imageUrl' => $item['image_url']
-            ];
-        }, $menu);
+        $formatted = array_map(fn($item) => $this->formatMenuItem($item), $menu);
 
         return $this->json($res, $formatted);
     }
@@ -248,7 +254,7 @@ class VendorController {
 
         return $this->json(
             $res,
-            $this->vendors->findMenuItem($id),
+            $this->formatMenuItem($this->vendors->findMenuItem($id)),
             201
         );
     }
@@ -267,7 +273,7 @@ class VendorController {
 
         return $this->json(
             $res,
-            $this->vendors->findMenuItem((int)$args['id'])
+            $this->formatMenuItem($this->vendors->findMenuItem((int)$args['id']))
         );
     }
 
@@ -282,7 +288,7 @@ class VendorController {
     public function toggleStock(Request $req, Response $res, array $args): Response{
         $item = $this->vendors->toggleStock((int)$args['id']);
 
-        return $this->json($res, $item);
+        return $this->json($res, $this->formatMenuItem($item));
     }
 
     public function toggleOpen(Request $req, Response $res, array $args): Response{
