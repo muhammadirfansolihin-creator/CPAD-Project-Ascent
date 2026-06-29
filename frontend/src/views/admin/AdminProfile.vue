@@ -1,7 +1,7 @@
 <template>
   <div>
     <nav class="navbar">
-      <div class="navbar-brand"><span class="navbar-brand-icon">🍴</span> CampusEats</div>
+      <div class="navbar-brand"><img src="/favicon.png" alt="CampusEats Logo" class="navbar-brand-icon" /> CampusEats</div>
       <div class="navbar-actions">
         <button class="navbar-icon-btn" @click="$router.push('/admin')" title="Back">←</button>
       </div>
