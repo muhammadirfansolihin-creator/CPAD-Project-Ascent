@@ -6,7 +6,7 @@
         <div class="navbar-subtitle" style="padding-left:1.6rem">for Vendor</div>
       </div>
       <div class="navbar-actions">
-        <button v-if="store.myVendor" :class="['open-toggle-btn', store.myVendor.isOpen?'is-open':'']" @click="toggle-open">
+        <button v-if="store.myVendor" :class="['open-toggle-btn', store.myVendor.isOpen?'is-open':'']" @click="toggleOpen">
           <span :class="store.myVendor.isOpen?'open-dot':'closed-dot'"></span>
           {{ store.myVendor.isOpen ? 'Open' : 'Closed' }}
         </button>
