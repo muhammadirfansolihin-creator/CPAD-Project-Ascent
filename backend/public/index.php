@@ -21,6 +21,7 @@ $app->add(function ($request, $handler) {
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 });
 
+$app->add(new App\Middleware\SecurityHeaders());
 $app->options('/{routes:.+}', function ($request, $response) {
     return $response;
 });

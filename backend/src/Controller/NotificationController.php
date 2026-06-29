@@ -14,6 +14,13 @@ class NotificationController {
         $this->repo = $repo;
     }
 
+    private function json(Response $res, mixed $data, int $status = 200): Response {
+        $res->getBody()->write(json_encode($data,
+            JSON_UNESCAPED_UNICODE| JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR
+        ));
+        return $res->withHeader('Content-Type', 'application/json')->withStatus($status);
+    }
+
     public function getNotifications(Request $req, Response $res): Response {
         $userId = (int)$req->getAttribute('userId');
         $rows = $this->repo->getByUserId($userId);
@@ -26,8 +33,7 @@ class NotificationController {
             'createdAt' => $n['created_at'],
         ], $rows);
 
-        $res->getBody()->write(json_encode($payload));
-        return $res->withHeader('Content-Type', 'application/json');
+        return $this->json($res, $payload);
     }
 
     public function markRead(Request $req, Response $res, array $args): Response {
@@ -35,12 +41,10 @@ class NotificationController {
         $userId = (int)$req->getAttribute('userId');
 
         if (!$this->repo->verifyOwnership($id, $userId)) {
-            $res->getBody()->write(json_encode(['error' => 'Not found or access denied']));
-            return $res->withHeader('Content-Type', 'application/json')->withStatus(404);
+            return $this->json($res, ['error' => 'Not found or access denied'], 404);
         }
 
         $this->repo->markAsRead($id);
-        $res->getBody()->write(json_encode(['success' => true]));
-        return $res->withHeader('Content-Type', 'application/json');
+        return $this->json($res, ['success' => true]);
     }
 }
