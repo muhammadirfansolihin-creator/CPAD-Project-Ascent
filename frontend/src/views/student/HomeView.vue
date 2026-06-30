@@ -44,7 +44,7 @@
         @click="selectedCat=cat.value">{{ cat.label }}</button>
     </div>
 
-    <div v-if="banner" class="promo-banner" :class="banner.theme" :style="{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(${getBackgroundImage(banner.theme)})`, backgroundSize: 'cover', backgroundPosition: 'center'}">
+    <div v-if="banner" class="promo-banner" :class="banner.theme" :style="{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(${backgrounds[banner.theme] || backgrounds.default})`, backgroundSize: 'cover', backgroundPosition: 'center'}">
         <div class="promo-banner-text-content">
         <h4 class="promo-banner-title">{{ banner.title }}</h4><br>
         <p class="promo-banner-subtitle">{{ banner.subtitle }}</p>
