@@ -124,6 +124,12 @@ class OrderRepository {
         $stmt->execute([$userId, $vendorId, $rating, $comment, date('Y-m-d H:i:s')]);
     }
 
+    public function hasReviewForOrder(int $userId, int $vendorId): bool {
+        $stmt = $this->db->prepare('SELECT id FROM reviews WHERE user_id = ? AND vendor_id = ?');
+        $stmt->execute([$userId, $vendorId]);
+        return (bool) $stmt->fetch();
+    }
+
     public function getStudentReviews(int $userId): array {
         $stmt = $this->db->prepare(
             'SELECT r.id, r.rating, r.comment, r.created_at,

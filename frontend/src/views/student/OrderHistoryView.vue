@@ -272,7 +272,14 @@ async function submitDispute() {
 }
 
 onMounted(async () => {
-  try { const { data } = await axios.get('/api/orders'); orders.value = data } finally { loading.value = false }
+  try {
+    const { data } = await axios.get('/api/orders')
+    orders.value = data
+    reviewedOrders.value = new Set(data.filter(o => o.hasReview).map(o => o.id))
+    disputedOrders.value = new Set(data.filter(o => o.hasDispute).map(o => o.id))
+  } finally {
+    loading.value = false
+  }
   notif.fetchNotifications()
 })
 </script>

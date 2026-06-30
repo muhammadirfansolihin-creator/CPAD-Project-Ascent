@@ -35,6 +35,12 @@ class DisputeRepository {
         $stmt->execute([$userId, $orderId, $description, date('Y-m-d H:i:s')]);
     }
 
+    public function hasDisputeForOrder(int $orderId): bool {
+        $stmt = $this->db->prepare('SELECT id FROM disputes WHERE order_id = ?');
+        $stmt->execute([$orderId]);
+        return (bool) $stmt->fetch();
+    }
+
     public function countPendingDisputes(): int{
         return (int)$this->db
             ->query("SELECT COUNT(*) FROM disputes WHERE status='open'")

@@ -106,7 +106,7 @@ class StudentController {
         $userId = (int)$req->getAttribute('userId');
         $orders = $this->orders->getStudentOrders($userId);
 
-        return $this->json($res, array_map(function($o) {
+        return $this->json($res, array_map(function($o) use ($userId) {
             return [
                 'id'          => (int)$o['id'],
                 'vendorId'    => (int)$o['vendor_id'],
@@ -115,6 +115,8 @@ class StudentController {
                 'total'       => (float)$o['total'],
                 'pickupTime'  => $o['pickup_at'],
                 'createdAt'   => $o['created_at'],
+                'hasReview'   => $this->orders->hasReviewForOrder($userId, (int)$o['vendor_id']),
+                'hasDispute'  => $this->disputes->hasDisputeForOrder((int)$o['id']),
                 'items'       => array_map(fn($i) => [
                     'id'         => (int)$i['id'],
                     'menuItemId' => (int)$i['menu_item_id'],
