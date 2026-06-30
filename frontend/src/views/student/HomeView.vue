@@ -61,7 +61,7 @@
     </template>
     <template v-else>
       <!-- Today's Special: food item cards -->
-      <template v-if="!search">
+      <template v-if="!search && selectedCat === 'all'">
         <div class="section-row">
           <span class="section-row-title">Today's Special</span>
           <a class="section-row-link">See all →</a>
@@ -244,15 +244,33 @@ const categories = [
   { value: 'vegetarian', label: '🥦 Vegetarian' },
 ]
 
+const ALL_CATEGORIES = [
+  { value: 'rice', label: 'Rice' },
+  { value: 'noodles', label: 'Noodles' },
+  { value: 'drinks', label: 'Drinks' },
+  { value: 'snacks', label: 'Snacks' },
+  { value: 'other', label: 'Other' },
+]
+
 const visibleCategories = computed(() =>
   selectedCat.value === 'all'
-    ? [{ value: 'rice', label: 'Rice' }, { value: 'noodles', label: 'Noodles' }, { value: 'drinks', label: 'Drinks' }, { value: 'snacks', label: 'Snacks' }, {value: 'other', label: 'Other'}]
-    : []
+    ? ALL_CATEGORIES
+    : ALL_CATEGORIES.filter(c => c.value === selectedCat.value)
 )
+
+const CATEGORY_EMOJI = { rice: '🍚', noodles: '🍜', drinks: '🥤', snacks: '🍡', other: '🍽️' }
 
 const filteredVendors = computed(() => {
   let list = vendors.value
-  if (search.value) list = list.filter(v => v.name.toLowerCase().includes(search.value.toLowerCase()) || v.location?.toLowerCase().includes(search.value.toLowerCase()))
+  if (search.value) {
+    list = list.filter(v =>
+      v.name.toLowerCase().includes(search.value.toLowerCase()) ||
+      v.location?.toLowerCase().includes(search.value.toLowerCase())
+    )
+  }
+  if (selectedCat.value !== 'all' && !search.value) {
+    list = list.filter(v => vendorEmoji(v.name) === CATEGORY_EMOJI[selectedCat.value])
+  }
   return list
 })
 
@@ -265,8 +283,11 @@ const vendorsByCategory = computed(() => ({
 }))
 
 const featuredItems = computed(() => {
-  if (allMenuItems.value.length) return allMenuItems.value.filter(i => i.isAvailable !== false)
-  return []
+  let list = allMenuItems.value.filter(i => i.isAvailable !== false)
+  if (selectedCat.value !== 'all') {
+    list = list.filter(i => (i.category || '').toLowerCase() === selectedCat.value)
+  }
+  return list
 })
 
 async function fetchActiveBanner() {
