@@ -23,7 +23,8 @@ $app->options('/{routes:.+}', function ($request, $response) {
     return $response;
 });
 
-$app->addErrorMiddleware(true, true, true);
+$debug = filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+$app->addErrorMiddleware($debug, $debug, $debug);
 
 // Include Decoupled Architecture Routes
 require __DIR__ . '/../src/Routes/auth.php';

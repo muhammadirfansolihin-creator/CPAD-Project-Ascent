@@ -18,18 +18,24 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Apache listens on 80 by default; Railway maps $PORT automatically via its proxy,
-# but Apache itself doesn't read $PORT — so override the listen port at runtime:
-RUN echo '<VirtualHost *:${PORT}>\n\
+# Apache listens on 80 by default; Render injects $PORT at *runtime*, not build time,
+# so the vhost/ports config must be generated when the container starts, via this entrypoint:
+RUN echo '#!/bin/bash\n\
+set -e\n\
+: "${PORT:=80}"\n\
+echo "Listen ${PORT}" > /etc/apache2/ports.conf\n\
+cat > /etc/apache2/sites-available/000-default.conf <<EOF\n\
+<VirtualHost *:${PORT}>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
         AllowOverride All\n\
         Require all granted\n\
     </Directory>\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
-
-RUN sed -i 's/Listen 80/Listen ${PORT}/' /etc/apache2/ports.conf
+</VirtualHost>\n\
+EOF\n\
+exec apache2-foreground' > /usr/local/bin/start-apache.sh \
+    && chmod +x /usr/local/bin/start-apache.sh
 
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+CMD ["/usr/local/bin/start-apache.sh"]
