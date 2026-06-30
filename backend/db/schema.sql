@@ -66,9 +66,11 @@ CREATE TABLE IF NOT EXISTS reviews (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     user_id    INT NOT NULL,
     vendor_id  INT NOT NULL,
+    order_id   INT NOT NULL,
     rating     TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment    TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reviews_order FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (user_id)   REFERENCES users(id),
     FOREIGN KEY (vendor_id) REFERENCES vendors(id)
 );
