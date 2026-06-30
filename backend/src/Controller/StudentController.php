@@ -133,7 +133,7 @@ class StudentController {
                 'total'       => (float)$o['total'],
                 'pickupTime'  => $o['pickup_at'],
                 'createdAt'   => $o['created_at'],
-                'hasReview'   => $this->orders->hasReviewForOrder($userId, (int)$o['vendor_id']),
+                'hasReview'   => $this->orders->hasReviewForOrder($userId, (int)$o['id']),
                 'hasDispute'  => $this->disputes->hasDisputeForOrder((int)$o['id']),
                 'items'       => array_map(fn($i) => [
                     'id'         => (int)$i['id'],
@@ -206,12 +206,15 @@ class StudentController {
         $userId = (int)$req->getAttribute('userId');
         $body = (array)$req->getParsedBody();
         $vendorId = (int)($body['vendorId'] ?? 0);
+        $orderId = (int)($body['orderId'] ?? 0);
         $rating = (int)($body['rating'] ?? 0);
         $comment = trim($body['comment'] ?? '');
 
-        if (!$vendorId || $rating < 1 || $rating > 5) return $this->json($res, ['error' => 'Valid vendor and ratings range required (1-5)'], 400);
+        if (!$vendorId || !$orderId || $rating < 1 || $rating > 5) {
+            return $this->json($res, ['error' => 'Valid order, vendor and ratings range required (1-5)'], 400);
+        }     
 
-        $this->orders->createReview($userId, $vendorId, $rating, $comment);
+        $this->orders->createReview($userId, $vendorId, $orderId, $rating, $comment);
         return $this->json($res, ['success' => true], 201);
     }
 

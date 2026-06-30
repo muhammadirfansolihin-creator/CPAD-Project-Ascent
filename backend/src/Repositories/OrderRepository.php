@@ -119,14 +119,14 @@ class OrderRepository {
         }
     }
 
-    public function createReview(int $userId, int $vendorId, int $rating, string $comment): void {
-        $stmt = $this->db->prepare('INSERT INTO reviews (user_id, vendor_id, rating, comment, created_at) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$userId, $vendorId, $rating, $comment, date('Y-m-d H:i:s')]);
+    public function createReview(int $userId, int $vendorId, int $orderId, int $rating, string $comment): void {
+        $stmt = $this->db->prepare('INSERT INTO reviews (user_id, vendor_id, order_id, rating, comment, created_at) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$userId, $vendorId, $orderId, $rating, $comment, date('Y-m-d H:i:s')]);
     }
 
-    public function hasReviewForOrder(int $userId, int $vendorId): bool {
-        $stmt = $this->db->prepare('SELECT id FROM reviews WHERE user_id = ? AND vendor_id = ?');
-        $stmt->execute([$userId, $vendorId]);
+    public function hasReviewForOrder(int $userId, int $orderId): bool {
+        $stmt = $this->db->prepare('SELECT id FROM reviews WHERE user_id = ? AND order_id = ?');
+        $stmt->execute([$userId, $orderId]);
         return (bool) $stmt->fetch();
     }
 

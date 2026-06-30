@@ -271,7 +271,8 @@ async function submitReview() {
   if (!reviewModal.rating) { reviewModal.error = 'Please select a star rating.'; return }
   reviewModal.submitting = true; reviewModal.error = ''
   try {
-    await axios.post(`/api/reviews`, { 
+    await axios.post(`/api/reviews`, {
+      orderId: reviewModal.orderId, 
       vendorId: reviewModal.vendorId,
       rating: reviewModal.rating, 
       comment: reviewModal.comment || '' 
