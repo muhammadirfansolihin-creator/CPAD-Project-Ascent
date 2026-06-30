@@ -60,6 +60,9 @@ class VendorController {
         $vendorId = (int)$vendor['id'];
         $orders = $this->orders->getVendorOrders($vendorId);
 
+        $avgRating = $this->vendors->getAverageRating($vendorId);
+        $reviewCount = count($this->orders->getVendorReviews($vendorId));
+
         $dailyRevenue = 0.0;
         $todayStr = date('Y-m-d');
         foreach ($orders as $o) {
@@ -101,7 +104,9 @@ class VendorController {
             'activeOrders' => $formattedOrders,
             'liveQueue'    => $formattedOrders,
             'status'       => $currentStatus,
-            'isActive'     => ($currentStatus === 'active')
+            'isActive'     => ($currentStatus === 'active'),
+            'avgRating'    => $avgRating !== null ? round($avgRating, 1) : null,
+            'reviewCount'  => $reviewCount
         ]);
     }
 
