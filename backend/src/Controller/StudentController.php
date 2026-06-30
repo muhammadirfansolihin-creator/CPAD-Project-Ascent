@@ -271,12 +271,13 @@ class StudentController {
 
         $formatted = array_map(function ($review) {
             return [
-                'id'        => (int)$review['id'],
-                'userId'    => (int)$review['user_id'],
-                'userName'  => $review['user_name'],
-                'rating'    => (int)$review['rating'],
-                'comment'   => $review['comment'],
-                'createdAt' => $review['created_at']
+                'id'           => (int)$review['id'],
+                'userId'       => (int)$review['user_id'],
+                'userName'     => $review['user_name'],
+                'rating'       => (int)$review['rating'],
+                'comment'      => $review['comment'],
+                'itemsOrdered' => $review['items_ordered'],
+                'createdAt'    => $review['created_at']
             ];
         }, $reviews);
 

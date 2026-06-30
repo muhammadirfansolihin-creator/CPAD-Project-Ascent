@@ -57,14 +57,27 @@
         <!-- Reviews -->
         <div class="section-title" style="padding:0">REVIEWS</div>
         <div v-if="!reviews.length" class="empty" style="padding:1.5rem"><p>No reviews yet.</p></div>
-        <div v-for="r in reviews" :key="r.id" class="order-card" style="margin-bottom:0.5rem">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-weight:700;font-size:0.88rem">{{ r.userName || 'Student' }}</span>
-            <span style="color:#d97706;font-size:0.9rem">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5-r.rating) }}</span>
+        <template v-else>
+          <div v-for="r in paginatedReviews" :key="r.id" class="order-card" style="margin-bottom:0.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:700;font-size:0.88rem">{{ r.userName || 'Student' }}</span>
+              <span style="color:#d97706;font-size:0.9rem">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5-r.rating) }}</span>
+            </div>
+            <p v-if="r.itemsOrdered" style="font-size:0.78rem;color:var(--color-muted);margin-top:0.3rem">🍽 {{ r.itemsOrdered }}</p>
+            <p v-if="r.comment" style="font-size:0.82rem;color:var(--color-muted);margin-top:0.3rem">{{ r.comment }}</p>
+            <p style="font-size:0.72rem;color:var(--color-muted);margin-top:0.2rem">{{ formatDate(r.createdAt) }}</p>
           </div>
-          <p v-if="r.comment" style="font-size:0.82rem;color:var(--color-muted);margin-top:0.3rem">{{ r.comment }}</p>
-          <p style="font-size:0.72rem;color:var(--color-muted);margin-top:0.2rem">{{ formatDate(r.createdAt) }}</p>
-        </div>
+
+          <!-- Reviews pagination -->
+          <div v-if="totalReviewPages > 1" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:1rem">
+            <button class="btn btn-ghost btn-sm" :disabled="reviewPage===1" @click="goToReviewPage(reviewPage-1)">← Previous</button>
+            <button v-for="p in totalReviewPages" :key="p"
+              :class="['btn', 'btn-sm', reviewPage===p ? 'btn-primary' : 'btn-outline']"
+              style="min-width:36px"
+              @click="goToReviewPage(p)">{{ p }}</button>
+            <button class="btn btn-ghost btn-sm" :disabled="reviewPage===totalReviewPages" @click="goToReviewPage(reviewPage+1)">Next →</button>
+          </div>
+        </template>
       </div>
     </template>
 
@@ -103,6 +116,21 @@ const menu    = ref([])
 const reviews = ref([])
 const loading = ref(true)
 const activeCat = ref('all')
+
+const reviewPage = ref(1)
+const reviewsPerPage = 5
+
+const totalReviewPages = computed(() => Math.max(1, Math.ceil(reviews.value.length / reviewsPerPage)))
+
+const paginatedReviews = computed(() => {
+  const start = (reviewPage.value - 1) * reviewsPerPage
+  return reviews.value.slice(start, start + reviewsPerPage)
+})
+
+function goToReviewPage(p) {
+  if (p < 1 || p > totalReviewPages.value) return
+  reviewPage.value = p
+}
 
 const menuCategories = ['rice','noodles','drinks','snacks','other']
 
