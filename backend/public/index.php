@@ -5,12 +5,9 @@ use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 // The config/db.php inclusion is dropped completely as autoload resolves App\Database via PSR-4 singleton setup maps.
-
 $app = AppFactory::create();
-
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
-
 // CORS Settings Middleware
 $app->add(function ($request, $handler) {
     $response = $handler->handle($request);
