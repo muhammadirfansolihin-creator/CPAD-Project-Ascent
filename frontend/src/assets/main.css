@@ -752,3 +752,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   font-style: italic; line-height: 1.5;
 }
 .my-review-no-comment { color: var(--color-muted); border-left-color: var(--color-border); font-style: normal; }
+
+/* ── See All pages ───────────────────────────────────────── */
+.see-all-list { padding-top: 0.25rem; }

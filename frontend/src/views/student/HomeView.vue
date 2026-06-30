@@ -56,7 +56,7 @@
     </div>
 
     <div v-if="loading" class="loading"><div class="spinner"></div></div>
-    <template v-else-if="!search && !filteredVendors.length">
+    <template v-else-if="!search && !filteredVendors.length && !Object.values(vendorsByCategory).some(arr => arr.length)">
       <div class="empty"><div class="empty-icon">🍽️</div><p>No vendors found</p></div>
     </template>
     <template v-else>
@@ -64,11 +64,11 @@
       <template v-if="!search && selectedCat === 'all'">
         <div class="section-row">
           <span class="section-row-title">Today's Special</span>
-          <a class="section-row-link">See all →</a>
+          <router-link to="/today-special" class="section-row-link">See all →</router-link>
         </div>
-        <div class="horizontal-scroll" ref="vendorsRef">
+        <div :class="expandedSection === 'featured' ? 'grid-2' : 'horizontal-scroll'" :ref="expandedSection === 'featured' ? null : 'vendorsRef'" :style="expandedSection === 'featured' ? 'padding:0 1rem 1rem' : ''">
           <router-link
-            v-for="item in featuredItems.slice(0, 6)"
+            v-for="item in (expandedSection === 'featured' ? featuredItems : featuredItems.slice(0, 6))"
             :key="'fi'+item.vendorId+item.name"
             :to="`/vendors/${item.vendorId}`"
             class="vendor-card"
@@ -93,15 +93,21 @@
         <template v-for="cat in visibleCategories" :key="cat.value">
           <div v-if="vendorsByCategory[cat.value]?.length" class="section-row" style="margin-top:0.5rem">
             <span class="section-row-title">{{ cat.label }}</span>
-            <a class="section-row-link">See all →</a>
+            <router-link :to="`/category/${cat.value}`" class="section-row-link">See all →</router-link>
           </div>
-          <div v-if="vendorsByCategory[cat.value]?.length" class="horizontal-scroll">
+          <div v-if="vendorsByCategory[cat.value]?.length" :class="expandedSection === cat.value ? 'grid-2' : 'horizontal-scroll'" :style="expandedSection === cat.value ? 'padding:0 1rem 1rem' : ''">
             <router-link v-for="v in vendorsByCategory[cat.value]" :key="cat.value+v.id" :to="`/vendors/${v.id}`" class="vendor-card">
-              <div class="vendor-card-img" :style="{ backgroundImage: `url(${vendorImage(v.id)})`, backgroundSize: 'cover', backgroundPosition: 'center'}"></div>
+              <div class="vendor-card-img" :style="{ backgroundImage: `url(${vendorImage(v.id)})`, backgroundSize: 'cover', backgroundPosition: 'center'}">
+                <span v-if="!vendorImage(v.id)">{{ getCategoryEmoji(cat.value) }}</span>
+              </div>
               <div class="vendor-card-body">
                 <div class="vendor-card-name">{{ v.name }}</div>
+                <div class="vendor-card-meta">📍 {{ v.location }}</div>
                 <div class="vendor-card-rating">
                   <span v-if="v.rating">★ {{ v.rating }}</span>
+                  <span :class="['badge', v.isOpen ? 'badge-active' : 'badge-inactive']" style="font-size:0.65rem">
+                    {{ v.isOpen ? 'Open' : 'Closed' }}
+                  </span>
                   <span class="badge badge-halal">HALAL</span>
                 </div>
               </div>
@@ -192,55 +198,53 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useNotificationStore } from '@/stores/notifications'
 
 const banner = ref(null)
-const auth   = useAuthStore()
-const cart   = useCartStore()
-
-const notif  = useNotificationStore()
+const auth = useAuthStore()
+const cart = useCartStore()
+const notif = useNotificationStore()
 const showNotif = ref(false)
 
 const backgrounds = {
   breakfast: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?q=80&w=1200&auto=format&fit=crop',
-  dinner:    'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
-  dessert:   'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1200&auto=format&fit=crop',
-  default:   'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop'
+  dinner: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
+  dessert: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1200&auto=format&fit=crop',
+  default: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop'
 }
 
 const menuSearchResults = ref([])
 const searchingMenu = ref(false)
-
-function getBackgroundImage(theme) {
-  return backgrounds[theme] || backgrounds.default
-}
-
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
-
-async function handleNotifClick(n) {
-  if (!n.isRead) await notif.markAsRead(n.id)
-}
-
+const expandedSection = ref(null)
 const search = ref('')
 const selectedCat = ref('all')
 const vendors = ref([])
 const loading = ref(true)
 const vendorsRef = ref(null)
 const allMenuItems = ref([])
+const categoryLoading = ref(false)
+
+// Category data from API
+const vendorsByCategory = ref({
+  rice: [],
+  noodles: [],
+  drinks: [],
+  snacks: [],
+  vegetarian: [],
+  other: []
+})
 
 const categories = [
-  { value: 'all',        label: 'All' },
-  { value: 'rice',       label: '🍚 Rice' },
-  { value: 'noodles',    label: '🍜 Noodles' },
-  { value: 'drinks',     label: '🥤 Drinks' },
-  { value: 'snacks',     label: '🍡 Snacks' },
-  { value: 'halal',      label: '☪️ Halal' },
+  { value: 'all', label: 'All' },
+  { value: 'rice', label: '🍚 Rice' },
+  { value: 'noodles', label: '🍜 Noodles' },
+  { value: 'drinks', label: '🥤 Drinks' },
+  { value: 'snacks', label: '🍡 Snacks' },
+  { value: 'halal', label: '☪️ Halal' },
   { value: 'vegetarian', label: '🥦 Vegetarian' },
 ]
 
@@ -249,6 +253,7 @@ const ALL_CATEGORIES = [
   { value: 'noodles', label: 'Noodles' },
   { value: 'drinks', label: 'Drinks' },
   { value: 'snacks', label: 'Snacks' },
+  { value: 'vegetarian', label: 'Vegetarian' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -258,29 +263,58 @@ const visibleCategories = computed(() =>
     : ALL_CATEGORIES.filter(c => c.value === selectedCat.value)
 )
 
-const CATEGORY_EMOJI = { rice: '🍚', noodles: '🍜', drinks: '🥤', snacks: '🍡', other: '🍽️' }
+function getCategoryEmoji(category) {
+  const emojis = {
+    rice: '🍚',
+    noodles: '🍜',
+    drinks: '🥤',
+    snacks: '🍡',
+    vegetarian: '🥦',
+    other: '🍽️'
+  }
+  return emojis[category] || '🍽️'
+}
 
-const filteredVendors = computed(() => {
-  let list = vendors.value
-  if (search.value) {
-    list = list.filter(v =>
-      v.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      v.location?.toLowerCase().includes(search.value.toLowerCase())
-    )
+// Fetch vendors by category from API
+async function fetchVendorsByCategory(category) {
+  if (categoryLoading.value) return
+  
+  try {
+    categoryLoading.value = true
+    const { data } = await axios.get(`/api/vendors/category/${category}`)
+    vendorsByCategory.value[category] = data
+  } catch (error) {
+    console.error(`Error fetching vendors for category ${category}:`, error)
+    vendorsByCategory.value[category] = []
+  } finally {
+    categoryLoading.value = false
   }
-  if (selectedCat.value !== 'all' && !search.value) {
-    list = list.filter(v => vendorEmoji(v.name) === CATEGORY_EMOJI[selectedCat.value])
+}
+
+async function loadAllCategories() {
+  const categories = ['rice', 'noodles', 'drinks', 'snacks', 'vegetarian', 'other']
+  for (const cat of categories) {
+    await fetchVendorsByCategory(cat)
   }
-  return list
+}
+
+// Watch for category changes
+watch(selectedCat, (newCat) => {
+  if (newCat === 'all') {
+    loadAllCategories()
+  } else {
+    fetchVendorsByCategory(newCat)
+  }
 })
 
-const vendorsByCategory = computed(() => ({
-  rice:    filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍚'),
-  noodles: filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍜'),
-  drinks:  filteredVendors.value.filter(v => vendorEmoji(v.name) === '🥤'),
-  snacks:  filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍡'),
-  other: filteredVendors.value.filter(v => vendorEmoji(v.name) === '🍽️')
-}))
+const filteredVendors = computed(() => {
+  if (!search.value) return []
+  
+  return vendors.value.filter(v =>
+    v.name.toLowerCase().includes(search.value.toLowerCase()) ||
+    v.location?.toLowerCase().includes(search.value.toLowerCase())
+  )
+})
 
 const featuredItems = computed(() => {
   let list = allMenuItems.value.filter(i => i.isAvailable !== false)
@@ -347,12 +381,29 @@ function scrollToVendors() {
   vendorsRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function toggleNotif() {
+  showNotif.value = !showNotif.value
+}
+
+async function handleNotifClick(n) {
+  if (!n.isRead) await notif.markAsRead(n.id)
+}
+
+function toggleSection(key) {
+  expandedSection.value = expandedSection.value === key ? null : key
+}
+
 onMounted(async () => {
   await fetchActiveBanner()
   await notif.fetchNotifications()
+  
   try {
     const { data } = await axios.get('/api/vendors')
     vendors.value = data
+    
+    // Load all categories
+    await loadAllCategories()
+    
     const topVendors = data.slice(0, 5)
     const menus = await Promise.allSettled(
       topVendors.map(v => axios.get(`/api/vendors/${v.id}/menu`).then(r => r.data.map(item => ({ ...item, vendorName: v.name, vendorId: v.id }))))
@@ -360,10 +411,10 @@ onMounted(async () => {
     allMenuItems.value = menus
       .filter(r => r.status === 'fulfilled')
       .flatMap(r => r.value)
-  } finally { loading.value = false }
+  } finally { 
+    loading.value = false 
+  }
 })
-
-import { watch } from 'vue'
 
 let searchDebounce = null
 watch(search, (val) => {

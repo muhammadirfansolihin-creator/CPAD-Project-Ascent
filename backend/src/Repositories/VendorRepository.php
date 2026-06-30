@@ -56,6 +56,21 @@ class VendorRepository {
         return $stmt->fetchAll();
     }
 
+    public function getVendorsByMenuCategory(string $category): array {
+        $sql = 'SELECT DISTINCT v.*, u.name AS owner_name 
+                FROM vendors v 
+                JOIN users u ON u.id = v.owner_id 
+                JOIN menu_items mi ON mi.vendor_id = v.id 
+                WHERE v.status = "active" 
+                AND mi.category = ? 
+                AND mi.in_stock = 1
+                ORDER BY v.name';
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$category]);
+        return $stmt->fetchAll();
+    }
+
     public function searchMenuItems(string $search): array {
     $stmt = $this->db->prepare(
         'SELECT mi.*, v.name AS vendor_name, v.id AS vendor_id
