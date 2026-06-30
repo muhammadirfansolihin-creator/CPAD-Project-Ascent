@@ -26,6 +26,11 @@ $app->options('/{routes:.+}', function ($request, $response) {
 $debug = filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 $app->addErrorMiddleware($debug, $debug, $debug);
 
+$app->get('/', function ($request, $response) {
+    $response->getBody()->write(json_encode(['status' => 'ok', 'service' => 'CPAD Project Ascent API']));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 // Include Decoupled Architecture Routes
 require __DIR__ . '/../src/Routes/auth.php';
 require __DIR__ . '/../src/Routes/student.php';
