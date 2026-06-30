@@ -12,7 +12,7 @@
         
         <div style="position:relative">
           <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
-            🔔
+            <Bell :size="20" />
             <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
           </button>
 
@@ -27,7 +27,7 @@
           </div>
         </div>
 
-        <router-link to="/vendor/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/vendor/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
@@ -45,7 +45,7 @@
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
 
       <div v-else-if="!store.menuItems.length" class="empty">
-        <div class="empty-icon">🍴</div>
+        <div class="empty-icon"><Utensils :size="40" /></div>
         <p>No menu items yet.</p>
         <button class="btn btn-primary" style="margin-top:1rem" @click="openAdd">+ Add Item</button>
       </div>
@@ -82,8 +82,8 @@
               </td>
               <td>
                 <div style="display:flex;gap:0.4rem">
-                  <button class="btn btn-ghost btn-sm" style="padding:0.3rem 0.55rem" @click="openEdit(item)" title="Edit">✏️</button>
-                  <button class="btn btn-ghost btn-sm" style="padding:0.3rem 0.55rem;color:var(--color-danger)" @click="confirmDelete(item.id)" title="Delete">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" style="padding:0.3rem 0.55rem" @click="openEdit(item)" title="Edit"><Pencil :size="14" /></button>
+                  <button class="btn btn-ghost btn-sm" style="padding:0.3rem 0.55rem;color:var(--color-danger)" @click="confirmDelete(item.id)" title="Delete"><Trash2 :size="14" /></button>
                 </div>
               </td>
             </tr>
@@ -97,7 +97,7 @@
       <div class="modal">
         <div class="modal-header">
           {{ editingItem ? 'Edit Item' : 'Add Menu Item' }}
-          <button class="close-btn" @click="closeModal">✕</button>
+          <button class="close-btn" @click="closeModal"><X :size="16" /></button>
         </div>
         <div class="modal-body">
           <div v-if="formError" class="alert alert-error">{{ formError }}</div>
@@ -142,15 +142,15 @@
 
     <nav class="bottom-nav">
       <router-link to="/vendor" class="bottom-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <LayoutGrid :size="22" />
         Dashboard
       </router-link>
       <router-link to="/vendor/orders" class="bottom-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
       <router-link to="/vendor/menu" class="bottom-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M3 10h18M5 22h14a2 2 0 002-2v-8H3v8a2 2 0 002 2z"/></svg>
+        <UtensilsCrossed :size="22" />
         Menu
       </router-link>
     </nav>
@@ -162,6 +162,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVendorOrdersStore } from '@/stores/vendorOrders'
 import { useNotificationStore } from '@/stores/notifications'
+import { Bell, User, Utensils, Pencil, Trash2, X, LayoutGrid, ClipboardList, UtensilsCrossed } from 'lucide-vue-next'
 
 const auth  = useAuthStore()
 const store = useVendorOrdersStore()
@@ -182,9 +183,7 @@ const filteredItems = computed(() => activeCat.value === 'all' ? store.menuItems
 function catLabel(c) { return { rice:'Rice', noodles:'Noodles', drinks:'Drinks', snacks:'Snacks', other:'Other' }[c] || c }
 function itemEmoji(cat) { return { rice:'🍚', noodles:'🍜', drinks:'🥤', snacks:'🍡', other:'🍽️' }[cat] || '🍽️' }
 
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
+function toggleNotif() { showNotif.value = !showNotif.value }
 
 function handleNotifClick(n) {
   notif.markAsRead(n.id)

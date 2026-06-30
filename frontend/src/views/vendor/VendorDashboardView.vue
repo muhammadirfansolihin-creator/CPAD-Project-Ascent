@@ -12,7 +12,7 @@
         
         <div style="position:relative">
           <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
-            🔔
+            <Bell :size="20" />
             <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
           </button>
 
@@ -27,16 +27,15 @@
           </div>
         </div>
 
-        <router-link to="/vendor/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/vendor/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
     <div class="page">
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
       <template v-else-if="!store.myVendor">
-        <!-- New vendor pending approval -->
         <div style="text-align:center;padding:3rem 1rem">
-          <div style="font-size:3rem;margin-bottom:1rem">⏳</div>
+          <div style="font-size:3rem;margin-bottom:1rem"><Hourglass :size="48" /></div>
           <div style="font-size:1.3rem;font-weight:800;margin-bottom:0.5rem">Account Pending Approval</div>
           <div style="color:var(--color-muted);font-size:0.9rem;max-width:320px;margin:0 auto">
             Your vendor account has been created and is awaiting admin approval. You will be able to manage your stall once approved.
@@ -56,12 +55,12 @@
           <div class="stat-card">
             <div class="stat-label">TODAY'S REVENUE</div>
             <div class="stat-value" style="color:var(--color-primary)">RM {{ revenue }}</div>
-            <div class="stat-change up">↑ +18% vs yesterday</div>
+            <div class="stat-change up" style="display:flex;align-items:center;gap:0.2rem"><TrendingUp :size="12" /> +18% vs yesterday</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">ORDERS TODAY</div>
             <div class="stat-value" style="color:var(--color-success)">{{ totalOrders }}</div>
-            <div class="stat-change up">↑ 5 more than usual</div>
+            <div class="stat-change up" style="display:flex;align-items:center;gap:0.2rem"><TrendingUp :size="12" /> 5 more than usual</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">ACTIVE ORDERS</div>
@@ -70,7 +69,7 @@
           </div>
           <div class="stat-card">
             <div class="stat-label">AVG RATING</div>
-            <div class="stat-value" style="color:#d97706">{{ avgRating }} ★</div>
+            <div class="stat-value" style="color:#d97706">{{ avgRating }} <Star :size="16" fill="#d97706" stroke="none" /></div>
             <div class="stat-sub">{{ store.dashboard?.reviewCount ?? 0 }} reviews total</div>
           </div>
         </div>
@@ -102,10 +101,10 @@
                 </div>
                 <div class="kanban-card-items">{{ formatItems(order.items) }}</div>
                 <div class="kanban-card-price">RM {{ Number(order.total||0).toFixed(2) }}</div>
-                <div class="kanban-card-pickup">🕐 {{ order.pickupAt }}</div>
+                <div class="kanban-card-pickup" style="display:flex;align-items:center;gap:0.3rem"><Clock :size="12" /> {{ order.pickupAt }}</div>
                 <button v-if="order.status==='placed'" class="kanban-action-btn btn-start-prep" @click="advance(order.id,'preparing')">Start Preparing →</button>
-                <button v-if="order.status==='preparing'" class="kanban-action-btn btn-mark-ready" @click="advance(order.id,'ready')">Mark Ready ✓</button>
-                <button v-if="order.status==='ready'" class="kanban-action-btn btn-mark-collected" @click="advance(order.id,'collected')">Mark Collected ✓</button>
+                <button v-if="order.status==='preparing'" class="kanban-action-btn btn-mark-ready" @click="advance(order.id,'ready')">Mark Ready <Check :size="13" /></button>
+                <button v-if="order.status==='ready'" class="kanban-action-btn btn-mark-collected" @click="advance(order.id,'collected')">Mark Collected <Check :size="13" /></button>
               </div>
             </div>
           </div>
@@ -115,15 +114,15 @@
 
     <nav class="bottom-nav">
       <router-link to="/vendor" class="bottom-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <LayoutGrid :size="22" />
         Dashboard
       </router-link>
       <router-link to="/vendor/orders" class="bottom-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
       <router-link to="/vendor/menu" class="bottom-nav-item">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M3 10h18M5 22h14a2 2 0 002-2v-8H3v8a2 2 0 002 2z"/></svg>
+        <UtensilsCrossed :size="22" />
         Menu
       </router-link>
     </nav>
@@ -135,6 +134,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVendorOrdersStore } from '@/stores/vendorOrders'
 import { useNotificationStore } from '@/stores/notifications'
+import { Bell, User, Hourglass, Star, TrendingUp, Clock, Check, LayoutGrid, ClipboardList, UtensilsCrossed } from 'lucide-vue-next'
 
 const auth  = useAuthStore()
 const store = useVendorOrdersStore()
@@ -176,9 +176,7 @@ function isUrgent(order) {
 
 function formatItems(items) { return (items||[]).map(i=>`+${i.quantity||i.qty||1} ${i.name}`).join(' ') }
 
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
+function toggleNotif() { showNotif.value = !showNotif.value }
 
 function handleNotifClick(n) {
   notif.markAsRead(n.id)

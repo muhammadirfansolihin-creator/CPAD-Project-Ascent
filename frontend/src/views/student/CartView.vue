@@ -1,14 +1,14 @@
 <template>
   <div>
     <nav class="navbar">
-      <router-link to="/" class="navbar-icon-btn" style="font-size:1.2rem;text-decoration:none">←</router-link>
+      <router-link to="/" class="navbar-icon-btn" style="text-decoration:none"><ChevronLeft :size="22" /></router-link>
       <div class="navbar-brand" style="font-size:1rem">Your Cart</div>
       <button class="navbar-icon-btn" @click="cart.clear()" style="font-size:0.8rem;width:auto;padding:0 0.5rem;border-radius:0.4rem">Clear</button>
     </nav>
 
     <div class="page">
       <div v-if="!cart.items.length" class="empty">
-        <div class="empty-icon">🛒</div>
+        <div class="empty-icon"><ShoppingCart :size="40" /></div>
         <p>Your cart is empty</p>
         <router-link to="/" class="btn btn-primary" style="margin-top:1rem">Browse Vendors</router-link>
       </div>
@@ -44,11 +44,15 @@
         <div class="card" style="margin-bottom:0.85rem">
           <div class="card-body">
             <div style="display:flex;align-items:center;gap:0.5rem;font-weight:700;font-size:0.95rem;margin-bottom:0.75rem">
-              <span>🕐</span> Pickup Time
+              <Clock :size="18" /> Pickup Time
             </div>
             <div class="pickup-tabs">
-              <button :class="['pickup-tab', pickupMode==='now'?'active':'']" @click="pickupMode='now'">⚡ Now</button>
-              <button :class="['pickup-tab', pickupMode==='schedule'?'active':'']" @click="pickupMode='schedule'">📅 Schedule</button>
+              <button :class="['pickup-tab', pickupMode==='now'?'active':'']" @click="pickupMode='now'">
+                <Zap :size="14" /> Now
+              </button>
+              <button :class="['pickup-tab', pickupMode==='schedule'?'active':'']" @click="pickupMode='schedule'">
+                <CalendarDays :size="14" /> Schedule
+              </button>
             </div>
             <div v-if="pickupMode==='now'" class="pickup-info">
               Your order will be prepared as soon as possible. Typical wait: <strong>~15 min</strong>
@@ -89,11 +93,11 @@
 
     <nav class="bottom-nav">
       <router-link to="/" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <Home :size="22" />
         Home
       </router-link>
       <router-link to="/orders" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
     </nav>
@@ -105,6 +109,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCartStore } from '@/stores/cart'
+import { ChevronLeft, ShoppingCart, Clock, Zap, CalendarDays, Home, ClipboardList } from 'lucide-vue-next'
 
 const cart         = useCartStore()
 const router       = useRouter()
@@ -148,11 +153,11 @@ async function placeOrder() {
       pickupAt: effectivePickup.value,
       items: cart.items.map(i => ({ menuItemId: i.id, qty: i.qty })),
     })
-    success.value = 'Order placed successfully!'
     cart.clear()
-    setTimeout(() => router.push('/orders'), 1500)
+    router.push('/orders')
   } catch (e) {
     error.value = e.response?.data?.error || 'Failed to place order. Please try again.'
-  } finally { loading.value = false }
+    loading.value = false
+  }
 }
 </script>

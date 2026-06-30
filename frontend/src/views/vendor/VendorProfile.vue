@@ -3,7 +3,7 @@
     <nav class="navbar">
       <div class="navbar-brand"><img src="/favicon.png" alt="CampusEats Logo" class="navbar-brand-icon" /> CampusEats</div>
       <div class="navbar-actions">
-        <button class="navbar-icon-btn" @click="$router.push('/vendor')" title="Back">←</button>
+        <button class="navbar-icon-btn" @click="$router.push('/vendor')" title="Back"><ChevronLeft :size="22" /></button>
       </div>
     </nav>
 
@@ -42,7 +42,9 @@
                 <div class="form-label">Opening Hours</div>
                 <div>{{ vendor.openingHours }}</div>
               </div>
-              <button class="btn btn-outline btn-block" @click="startEdit">✎ Edit Stall Info</button>
+              <button class="btn btn-outline btn-block" style="display:flex;align-items:center;justify-content:center;gap:0.4rem" @click="startEdit">
+                <Pencil :size="14" /> Edit Stall Info
+              </button>
             </template>
 
             <template v-else>
@@ -79,6 +81,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { ChevronLeft, Pencil } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth   = useAuthStore()

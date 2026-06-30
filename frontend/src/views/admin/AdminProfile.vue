@@ -3,13 +3,13 @@
     <nav class="navbar">
       <div class="navbar-brand"><img src="/favicon.png" alt="CampusEats Logo" class="navbar-brand-icon" /> CampusEats</div>
       <div class="navbar-actions">
-        <button class="navbar-icon-btn" @click="$router.push('/admin')" title="Back">←</button>
+        <button class="navbar-icon-btn" @click="$router.push('/admin')" title="Back"><ChevronLeft :size="22" /></button>
       </div>
     </nav>
 
     <div class="admin-tabs">
       <router-link to="/admin"          class="admin-tab">Sales Summary</router-link>
-      <router-link to="/admin/vendor"  class="admin-tab">Vendors</router-link>
+      <router-link to="/admin/vendors"  class="admin-tab">Vendors</router-link>
       <router-link to="/admin/disputes" class="admin-tab">Disputes</router-link>
     </div>
 
@@ -37,6 +37,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { ChevronLeft } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth   = useAuthStore()

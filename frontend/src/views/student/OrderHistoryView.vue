@@ -5,7 +5,7 @@
       
       <div class="navbar-actions" style="position:relative">
         <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
-          🔔
+          <Bell :size="20" />
           <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
         </button>
 
@@ -17,11 +17,12 @@
             <div>{{ n.message }}</div>
             <div class="notif-item-time">{{ n.createdAt }}</div>
           </div>
-      </div>
+        </div>
 
-
-        <router-link to="/cart" class="navbar-icon-btn">🛒<span v-if="cart.itemCount" class="badge-dot"></span></router-link>
-        <router-link to="/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/cart" class="navbar-icon-btn">
+          <ShoppingCart :size="20" /><span v-if="cart.itemCount" class="badge-dot"></span>
+        </router-link>
+        <router-link to="/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
@@ -38,7 +39,6 @@
           </button>
         </div>
 
-      <!-- Filter Date -->
         <select v-model="dateFilter" class="form-control" style="width:auto">
           <option value="today">Today</option>
           <option value="week">This Week</option>
@@ -48,7 +48,7 @@
 
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
       <div v-else-if="!paginatedOrders.length" class="empty">
-        <div class="empty-icon">📋</div>
+        <div class="empty-icon"><ClipboardList :size="40" /></div>
         <p>No orders here</p>
         <router-link to="/" class="btn btn-primary" style="margin-top:1rem">Order Now</router-link>
       </div>
@@ -66,11 +66,17 @@
           <span class="order-card-total">RM {{ Number(order.total).toFixed(2) }}</span>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end">
             <button v-if="order.status==='collected' && !reviewedOrders.has(order.id)"
-              class="btn btn-outline btn-sm" @click="openReview(order)">⭐ Review</button>
+              class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:0.3rem" @click="openReview(order)">
+              <Star :size="13" /> Review
+            </button>
             <span v-else-if="order.status==='collected' && reviewedOrders.has(order.id)"
-              style="font-size:0.78rem;color:var(--color-success);font-weight:700;align-self:center">✓ Reviewed</span>
+              style="display:flex;align-items:center;gap:0.25rem;font-size:0.78rem;color:var(--color-success);font-weight:700;align-self:center">
+              <Check :size="13" /> Reviewed
+            </span>
             <button v-if="order.status==='collected' && !disputedOrders.has(order.id)"
-              class="btn btn-ghost btn-sm" @click="openDispute(order)">⚠ Dispute</button>
+              class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:0.3rem" @click="openDispute(order)">
+              <AlertTriangle :size="13" /> Dispute
+            </button>
             <button class="btn btn-outline btn-sm" @click="reorder(order)">Reorder</button>
           </div>
         </div>
@@ -92,13 +98,15 @@
       <div class="modal">
         <div class="modal-header">
           Rate your experience
-          <button class="close-btn" @click="closeReview">✕</button>
+          <button class="close-btn" @click="closeReview"><X :size="16" /></button>
         </div>
         <div class="modal-body">
           <p style="font-size:0.85rem;color:var(--color-muted);margin-bottom:0.75rem">{{ reviewModal.vendorName }}</p>
           <div class="star-row">
-            <span v-for="s in 5" :key="s" :class="['star', reviewModal.rating>=s?'filled':'']" @click="reviewModal.rating=s">
-              {{ reviewModal.rating >= s ? '⭐' : '☆' }}
+            <span v-for="s in 5" :key="s" :class="['star', reviewModal.rating>=s?'filled':'']" @click="reviewModal.rating=s" style="cursor:pointer">
+              <Star :size="24"
+                :fill="reviewModal.rating >= s ? '#f59e0b' : 'none'"
+                :stroke="reviewModal.rating >= s ? '#f59e0b' : '#d1d5db'" />
             </span>
           </div>
           <p style="text-align:center;font-size:0.8rem;color:var(--color-muted);margin-bottom:1rem">
@@ -121,7 +129,7 @@
       <div class="modal">
         <div class="modal-header">
           File a Dispute
-          <button class="close-btn" @click="closeDispute">✕</button>
+          <button class="close-btn" @click="closeDispute"><X :size="16" /></button>
         </div>
         <div class="modal-body">
           <p style="font-size:0.85rem;color:var(--color-muted);margin-bottom:0.5rem">
@@ -147,11 +155,11 @@
 
     <nav class="bottom-nav">
       <router-link to="/" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <Home :size="22" />
         Home
       </router-link>
       <router-link to="/orders" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
     </nav>
@@ -165,6 +173,7 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useNotificationStore } from '@/stores/notifications'
+import { Bell, ShoppingCart, User, Home, ClipboardList, Star, Check, AlertTriangle, X } from 'lucide-vue-next'
 
 const auth   = useAuthStore()
 const cart   = useCartStore()
@@ -189,18 +198,15 @@ const tabs = [
 const filteredOrders = computed(() => {
   let result = orders.value
 
-  // 1. Tab filter (sedia ada)
   if (activeTab.value === 'active') {
     result = result.filter(o => ['placed', 'preparing', 'ready'].includes(o.status))
   } else if (activeTab.value === 'completed') {
     result = result.filter(o => o.status === 'collected')
   }
 
-  // 2. Date filter (BARU)
   if (dateFilter.value !== 'all') {
     const startOfToday = new Date()
     startOfToday.setHours(0, 0, 0, 0)
-
     result = result.filter(o => {
       const created = new Date(o.createdAt)
       if (dateFilter.value === 'today') return created >= startOfToday
@@ -247,9 +253,7 @@ function summariseItems(items) {
   return items.map(i => `${i.qty} × ${i.name}`).join(' · ')
 }
 
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
+function toggleNotif() { showNotif.value = !showNotif.value }
 
 function handleNotifClick(n) {
   notif.markAsRead(n.id)

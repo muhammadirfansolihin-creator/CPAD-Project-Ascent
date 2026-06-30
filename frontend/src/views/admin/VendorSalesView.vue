@@ -3,7 +3,7 @@
     <nav class="navbar">
       <div class="navbar-brand"><img src="/favicon.png" alt="CampusEats Logo" class="navbar-brand-icon" /> CampusEats</div>
       <div class="navbar-actions">
-        <button class="navbar-icon-btn" @click="$router.push('/admin')" title="Back">←</button>
+        <button class="navbar-icon-btn" @click="$router.push('/admin')" title="Back"><ChevronLeft :size="22" /></button>
       </div>
     </nav>
 
@@ -48,6 +48,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { ChevronLeft } from 'lucide-vue-next'
 
 const period = ref('today')
 const vendorRevenue = ref([])

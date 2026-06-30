@@ -7,7 +7,7 @@
       
       <div class="navbar-actions" style="position:relative">
         <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
-          🔔
+          <Bell :size="20" />
           <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
         </button>
 
@@ -22,17 +22,17 @@
     </div>
 
         <router-link to="/cart" class="navbar-icon-btn">
-          🛒
+          <ShoppingCart :size="20" />
           <span v-if="cart.itemCount" class="badge-dot"></span>
         </router-link>
-        <router-link to="/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
     <!-- Search -->
     <div class="search-wrap">
       <div class="search-bar">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <Search :size="18" />
         <input v-model="search" class="form-control" placeholder="Search for a dish or vendor…" />
       </div>
     </div>
@@ -57,7 +57,7 @@
 
     <div v-if="loading" class="loading"><div class="spinner"></div></div>
     <template v-else-if="!search && !filteredVendors.length && !Object.values(vendorsByCategory).some(arr => arr.length)">
-      <div class="empty"><div class="empty-icon">🍽️</div><p>No vendors found</p></div>
+      <div class="empty"><div class="empty-icon"><UtensilsCrossed :size="40" /></div><p>No vendors found</p></div>
     </template>
     <template v-else>
       <!-- Today's Special: food item cards -->
@@ -102,9 +102,9 @@
               </div>
               <div class="vendor-card-body">
                 <div class="vendor-card-name">{{ v.name }}</div>
-                <div class="vendor-card-meta">📍 {{ v.location }}</div>
+                <div class="vendor-card-meta" style="display:flex;align-items:center;gap:0.2rem"><MapPin :size="11" /> {{ v.location }}</div>
                 <div class="vendor-card-rating">
-                  <span v-if="v.rating">★ {{ v.rating }}</span>
+                  <span v-if="v.rating" style="display:flex;align-items:center;gap:0.15rem"><Star :size="11" fill="#d97706" stroke="none" /> {{ v.rating }}</span>
                   <span :class="['badge', v.isOpen ? 'badge-active' : 'badge-inactive']" style="font-size:0.65rem">
                     {{ v.isOpen ? 'Open' : 'Closed' }}
                   </span>
@@ -125,7 +125,7 @@
         <!-- Meals Section -->
         <template v-if="menuSearchResults.length">
           <div style="padding:0 1rem 0.5rem">
-            <h4 style="margin:0 0 0.5rem 0; color: var(--color-muted); font-size:0.9rem">🍽️ Meals ({{ menuSearchResults.length }})</h4>
+            <h4 style="margin:0 0 0.5rem 0; color: var(--color-muted); font-size:0.9rem;display:flex;align-items:center;gap:0.35rem"><UtensilsCrossed :size="15" /> Meals ({{ menuSearchResults.length }})</h4>
             <div class="grid-2">
               <router-link
                 v-for="item in menuSearchResults"
@@ -155,7 +155,7 @@
         <!-- Vendors Section -->
         <template v-if="filteredVendors.length">
           <div style="padding:0 1rem 0.5rem">
-            <h4 style="margin:0 0 0.5rem 0; color: var(--color-muted); font-size:0.9rem">🏪 Vendors ({{ filteredVendors.length }})</h4>
+            <h4 style="margin:0 0 0.5rem 0; color: var(--color-muted); font-size:0.9rem;display:flex;align-items:center;gap:0.35rem"><Store :size="15" /> Vendors ({{ filteredVendors.length }})</h4>
             <div class="grid-2">
               <router-link v-for="v in filteredVendors" :key="'all'+v.id" :to="`/vendors/${v.id}`" class="vendor-card">
                 <div class="vendor-card-img" :style="`background-image:url(${vendorImage(v.id)});background-size:cover;background-position:center;`">
@@ -163,9 +163,9 @@
                 </div>
                 <div class="vendor-card-body">
                   <div class="vendor-card-name">{{ v.name }}</div>
-                  <div class="vendor-card-meta">📍 {{ v.location }}</div>
+                  <div class="vendor-card-meta" style="display:flex;align-items:center;gap:0.2rem"><MapPin :size="11" /> {{ v.location }}</div>
                   <div class="vendor-card-rating">
-                    <span v-if="v.rating">★ {{ v.rating }}</span>
+                    <span v-if="v.rating" style="display:flex;align-items:center;gap:0.15rem"><Star :size="11" fill="#d97706" stroke="none" /> {{ v.rating }}</span>
                     <span :class="['badge', v.isOpen?'badge-active':'badge-inactive']" style="font-size:0.65rem">{{ v.isOpen?'Open':'Closed' }}</span>
                   </div>
                 </div>
@@ -176,7 +176,7 @@
         
         <!-- No Results -->
         <template v-if="!menuSearchResults.length && !filteredVendors.length && !searchingMenu">
-          <div class="empty"><div class="empty-icon">🔍</div><p>No results found for "{{ search }}"</p></div>
+          <div class="empty"><div class="empty-icon"><Search :size="40" /></div><p>No results found for "{{ search }}"</p></div>
         </template>
       </template>
     </template>
@@ -186,11 +186,11 @@
     <!-- Bottom nav -->
     <nav class="bottom-nav">
       <router-link to="/" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <Home :size="22" />
         Home
       </router-link>
       <router-link to="/orders" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
     </nav>
@@ -203,6 +203,7 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useNotificationStore } from '@/stores/notifications'
+import { Bell, ShoppingCart, User, Search, Home, ClipboardList, MapPin, Star, UtensilsCrossed, Store } from 'lucide-vue-next'
 
 const banner = ref(null)
 const auth = useAuthStore()
@@ -228,7 +229,6 @@ const vendorsRef = ref(null)
 const allMenuItems = ref([])
 const categoryLoading = ref(false)
 
-// Category data from API
 const vendorsByCategory = ref({
   rice: [],
   noodles: [],
@@ -264,21 +264,12 @@ const visibleCategories = computed(() =>
 )
 
 function getCategoryEmoji(category) {
-  const emojis = {
-    rice: '🍚',
-    noodles: '🍜',
-    drinks: '🥤',
-    snacks: '🍡',
-    vegetarian: '🥦',
-    other: '🍽️'
-  }
+  const emojis = { rice: '🍚', noodles: '🍜', drinks: '🥤', snacks: '🍡', vegetarian: '🥦', other: '🍽️' }
   return emojis[category] || '🍽️'
 }
 
-// Fetch vendors by category from API
 async function fetchVendorsByCategory(category) {
   if (categoryLoading.value) return
-  
   try {
     categoryLoading.value = true
     const { data } = await axios.get(`/api/vendors/category/${category}`)
@@ -298,7 +289,6 @@ async function loadAllCategories() {
   }
 }
 
-// Watch for category changes
 watch(selectedCat, (newCat) => {
   if (newCat === 'all') {
     loadAllCategories()
@@ -309,7 +299,6 @@ watch(selectedCat, (newCat) => {
 
 const filteredVendors = computed(() => {
   if (!search.value) return []
-  
   return vendors.value.filter(v =>
     v.name.toLowerCase().includes(search.value.toLowerCase()) ||
     v.location?.toLowerCase().includes(search.value.toLowerCase())
@@ -327,13 +316,8 @@ const featuredItems = computed(() => {
 async function fetchActiveBanner() {
   try {
     const {data} = await axios.get('/api/active-banner')
-    console.log('Active banner:', data)
     if(data){
-      banner.value = {
-        title: data.title,
-        subtitle: data.subtitle,
-        theme: data.theme
-      }
+      banner.value = { title: data.title, subtitle: data.subtitle, theme: data.theme }
     } else{
       banner.value = null
     }
@@ -343,26 +327,13 @@ async function fetchActiveBanner() {
 }
 
 const FOOD_IMAGES = {
-  rice: '/rice.jpg',
-  noodles: '/noodles.jpg',
-  drinks: '/drinks.jpg',
-  snacks: '/snacks.jpg',
-  other: '/other.jpg'
+  rice: '/rice.jpg', noodles: '/noodles.jpg', drinks: '/drinks.jpg', snacks: '/snacks.jpg', other: '/other.jpg'
 }
 
-const VENDOR_IMAGES = {
-  1: '/canteen.jpg',
-  2: '/warung.jpg',
-  3: '/drinkstall.jfif'
-}
+const VENDOR_IMAGES = { 1: '/canteen.jpg', 2: '/warung.jpg', 3: '/drinkstall.jfif' }
 
-function vendorImage(id) {
-  return VENDOR_IMAGES[id] || ''
-}
-
-function foodImage(category) {
-  return FOOD_IMAGES[(category|| '').toLowerCase().trim()] || FOOD_IMAGES.other
-}
+function vendorImage(id) { return VENDOR_IMAGES[id] || '' }
+function foodImage(category) { return FOOD_IMAGES[(category|| '').toLowerCase().trim()] || FOOD_IMAGES.other }
 
 function vendorEmoji(name) {
   const n = (name || '').toLowerCase()
@@ -381,9 +352,7 @@ function scrollToVendors() {
   vendorsRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
+function toggleNotif() { showNotif.value = !showNotif.value }
 
 async function handleNotifClick(n) {
   if (!n.isRead) await notif.markAsRead(n.id)
@@ -396,21 +365,15 @@ function toggleSection(key) {
 onMounted(async () => {
   await fetchActiveBanner()
   await notif.fetchNotifications()
-  
   try {
     const { data } = await axios.get('/api/vendors')
     vendors.value = data
-    
-    // Load all categories
     await loadAllCategories()
-    
     const topVendors = data.slice(0, 5)
     const menus = await Promise.allSettled(
       topVendors.map(v => axios.get(`/api/vendors/${v.id}/menu`).then(r => r.data.map(item => ({ ...item, vendorName: v.name, vendorId: v.id }))))
     )
-    allMenuItems.value = menus
-      .filter(r => r.status === 'fulfilled')
-      .flatMap(r => r.value)
+    allMenuItems.value = menus.filter(r => r.status === 'fulfilled').flatMap(r => r.value)
   } finally { 
     loading.value = false 
   }

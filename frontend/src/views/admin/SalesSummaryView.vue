@@ -6,7 +6,7 @@
         
         <div style="position:relative">
           <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
-            🔔
+            <Bell :size="20" />
             <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
           </button>
 
@@ -21,7 +21,7 @@
           </div>
         </div> 
 
-        <router-link to="/admin/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/admin/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
@@ -39,12 +39,12 @@
           <div class="stat-card">
             <div class="stat-label">ORDERS TODAY</div>
             <div class="stat-value">{{ store.analytics.totalOrders }}</div>
-            <div class="stat-change up">↑ +10% vs yesterday</div>
+            <div class="stat-change up" style="display:flex;align-items:center;gap:0.2rem"><TrendingUp :size="12" /> +10% vs yesterday</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">REVENUE TODAY</div>
             <div class="stat-value" style="color:var(--color-primary)">RM {{ store.analytics.totalRevenue.toFixed(0) }}</div>
-            <div class="stat-change up">↑ +12% vs yesterday</div>
+            <div class="stat-change up" style="display:flex;align-items:center;gap:0.2rem"><TrendingUp :size="12" /> +12% vs yesterday</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">ACTIVE VENDORS</div>
@@ -88,6 +88,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminDashboardStore } from '@/stores/adminDashboard'
 import { useNotificationStore } from '@/stores/notifications'
+import { Bell, User, TrendingUp } from 'lucide-vue-next'
 
 const auth    = useAuthStore()
 const store   = useAdminDashboardStore()
@@ -98,9 +99,7 @@ const showNotif = ref(false)
 const maxRevenue = computed(() => Math.max(...(store.analytics?.vendorRevenue.map(v => v.revenue) || [1]), 1))
 function barWidth(rev) { return Math.round((rev / maxRevenue.value) * 100) }
 
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
+function toggleNotif() { showNotif.value = !showNotif.value }
 
 function handleNotifClick(n) {
   notif.markAsRead(n.id)

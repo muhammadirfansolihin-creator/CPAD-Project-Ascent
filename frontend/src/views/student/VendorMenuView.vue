@@ -1,10 +1,10 @@
 <template>
   <div>
     <nav class="navbar">
-      <router-link to="/" class="navbar-icon-btn" style="font-size:1.2rem;text-decoration:none">←</router-link>
+      <router-link to="/" class="navbar-icon-btn" style="text-decoration:none"><ChevronLeft :size="22" /></router-link>
       <div class="navbar-brand" style="font-size:1rem">{{ vendor?.name || 'Menu' }}</div>
       <router-link to="/cart" class="navbar-icon-btn">
-        🛒<span v-if="cart.itemCount" class="badge-dot"></span>
+        <ShoppingCart :size="20" /><span v-if="cart.itemCount" class="badge-dot"></span>
       </router-link>
     </nav>
 
@@ -13,14 +13,16 @@
       <!-- Vendor hero -->
       <div class="vendor-hero">
         <h1>{{ vendor.name }}</h1>
-        <div class="vendor-hero-location">
-          📍 {{ vendor.location }}
+        <div class="vendor-hero-location" style="display:flex;align-items:center;gap:0.3rem;flex-wrap:wrap">
+          <MapPin :size="13" /> {{ vendor.location }}
           <span style="margin:0 0.5rem;color:var(--color-border)">·</span>
           <strong>Opening Hours:</strong> {{ vendor.openingHours }}
         </div>
-        <div class="vendor-hero-rating">
-          <span v-if="vendor.rating">★ {{ vendor.rating }}</span>
-          <span v-if="vendor.rating" style="color:var(--color-muted);font-weight:400">({{ reviews.length }} ratings)</span>
+        <div class="vendor-hero-rating" style="display:flex;align-items:center;gap:0.35rem">
+          <template v-if="vendor.rating">
+            <Star :size="14" fill="#d97706" stroke="none" /> {{ vendor.rating }}
+            <span style="color:var(--color-muted);font-weight:400">({{ reviews.length }} ratings)</span>
+          </template>
           <span class="badge badge-halal" style="margin-left:0.5rem">HALAL</span>
         </div>
       </div>
@@ -35,7 +37,7 @@
       </div>
 
       <!-- Menu grid -->
-      <div style="padding:1rem">
+      <div style="padding:1rem 1rem 7rem">
         <template v-for="cat in menuCategories" :key="cat">
           <div v-if="visibleItems(cat).length">
             <div class="section-title" style="padding:0;margin-bottom:0.75rem">{{ catLabel(cat).toUpperCase() }} DISHES</div>
@@ -61,9 +63,15 @@
           <div v-for="r in paginatedReviews" :key="r.id" class="order-card" style="margin-bottom:0.5rem">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <span style="font-weight:700;font-size:0.88rem">{{ r.userName || 'Student' }}</span>
-              <span style="color:#d97706;font-size:0.9rem">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5-r.rating) }}</span>
+              <span style="display:flex;align-items:center;gap:0.1rem">
+                <Star v-for="s in 5" :key="s" :size="13"
+                  :fill="s <= r.rating ? '#d97706' : 'none'"
+                  :stroke="s <= r.rating ? '#d97706' : '#d1d5db'" />
+              </span>
             </div>
-            <p v-if="r.itemsOrdered" style="font-size:0.78rem;color:var(--color-muted);margin-top:0.3rem">🍽 {{ r.itemsOrdered }}</p>
+            <p v-if="r.itemsOrdered" style="display:flex;align-items:center;gap:0.3rem;font-size:0.78rem;color:var(--color-muted);margin-top:0.3rem">
+              <UtensilsCrossed :size="12" /> {{ r.itemsOrdered }}
+            </p>
             <p v-if="r.comment" style="font-size:0.82rem;color:var(--color-muted);margin-top:0.3rem">{{ r.comment }}</p>
             <p style="font-size:0.72rem;color:var(--color-muted);margin-top:0.2rem">{{ formatDate(r.createdAt) }}</p>
           </div>
@@ -83,11 +91,11 @@
 
     <nav class="bottom-nav">
       <router-link to="/" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <Home :size="22" />
         Home
       </router-link>
       <router-link to="/orders" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
     </nav>
@@ -108,6 +116,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useCartStore } from '@/stores/cart'
+import { ChevronLeft, ShoppingCart, Home, ClipboardList, MapPin, Star, UtensilsCrossed } from 'lucide-vue-next'
 
 const route   = useRoute()
 const cart    = useCartStore()
@@ -141,16 +150,10 @@ const availableCategories = computed(() => {
 })
 
 const FOOD_IMAGES = {
-  rice: '/rice.jpg',
-  noodles: '/noodles.jpg',
-  drinks: '/drinks.jpg',
-  snacks: '/snacks.jpg',
-  other: '/other.jpg'
+  rice: '/rice.jpg', noodles: '/noodles.jpg', drinks: '/drinks.jpg', snacks: '/snacks.jpg', other: '/other.jpg'
 }
 
-function foodImage(category) {
-  return FOOD_IMAGES[category] || FOOD_IMAGES.other
-}
+function foodImage(category) { return FOOD_IMAGES[category] || FOOD_IMAGES.other }
 
 function visibleItems(cat) {
   if (activeCat.value !== 'all' && activeCat.value !== cat) return []

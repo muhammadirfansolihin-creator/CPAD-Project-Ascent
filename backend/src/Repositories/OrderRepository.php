@@ -134,7 +134,7 @@ class OrderRepository {
         $stmt = $this->db->prepare(
             'SELECT r.id, r.rating, r.comment, r.created_at,
                     v.id AS vendor_id, v.name AS vendor_name,
-                    (SELECT GROUP_CONCAT(oi.name SEPARATOR ", ")
+                    (SELECT GROUP_CONCAT(oi.name, ", ")
                     FROM order_items oi
                     WHERE oi.order_id = r.order_id
                     ) AS items_ordered
@@ -157,7 +157,7 @@ class OrderRepository {
                 r.comment,
                 r.created_at,
                 u.name AS user_name,
-                (SELECT GROUP_CONCAT(oi.name SEPARATOR ', ')
+                (SELECT GROUP_CONCAT(oi.name, ', ')
                  FROM order_items oi
                  WHERE oi.order_id = r.order_id
                 ) AS items_ordered
@@ -174,18 +174,19 @@ class OrderRepository {
 
     public function getActiveBanner(): ?array
     {
+        $currentTime = date('H:i:s');
         $stmt = $this->db->prepare("
             SELECT *
             FROM dynamic_banners
             WHERE is_active = 1
-             AND (
-             ( start_time <= end_time AND CURTIME() BETWEEN start_time AND end_time)
-             OR ( start_time > end_time AND ( CURTIME() >= start_time OR CURTIME() <= end_time)
-             )) 
+              AND (
+                (start_time <= end_time AND :t1 BETWEEN start_time AND end_time)
+                OR (start_time > end_time AND (:t2 >= start_time OR :t3 <= end_time))
+              )
             LIMIT 1
         ");
 
-        $stmt->execute();
+        $stmt->execute([':t1' => $currentTime, ':t2' => $currentTime, ':t3' => $currentTime]);
 
         $banner = $stmt->fetch();
 

@@ -6,7 +6,7 @@
         
         <div style="position:relative">
           <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
-            🔔
+            <Bell :size="20" />
             <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
           </button>
 
@@ -21,7 +21,7 @@
           </div>
         </div>
 
-        <router-link to="/admin/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/admin/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
@@ -47,12 +47,12 @@
       </div>
 
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
-      <div v-else-if="!store.disputes.length" class="empty">
-        <div class="empty-icon">✅</div>
+      <div v-else-if="!filteredDisputes.length" class="empty">
+        <div class="empty-icon"><CheckCircle2 :size="40" /></div>
         <p>No disputes found</p>
       </div>
 
-      <div v-for="d in store.disputes" :key="d.id" class="card" style="margin-bottom:0.75rem">
+      <div v-for="d in filteredDisputes" :key="d.id" class="card" style="margin-bottom:0.75rem">
         <div class="card-body">
           <!-- Header row -->
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.6rem">
@@ -80,8 +80,12 @@
               </div>
             </div>
             <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
-              <button class="btn btn-success btn-sm" style="flex:1" :disabled="!resolutions[d.id]" @click="resolve(d.id)">✓ Mark Resolved</button>
-              <button class="btn btn-warning btn-sm" style="flex:1" :disabled="!resolutions[d.id]" @click="refund(d.id)">↩ Refund</button>
+              <button class="btn btn-success btn-sm" style="flex:1;display:flex;align-items:center;justify-content:center;gap:0.3rem" :disabled="!resolutions[d.id]" @click="resolve(d.id)">
+                <Check :size="13" /> Mark Resolved
+              </button>
+              <button class="btn btn-warning btn-sm" style="flex:1;display:flex;align-items:center;justify-content:center;gap:0.3rem" :disabled="!resolutions[d.id]" @click="refund(d.id)">
+                <RotateCcw :size="13" /> Refund
+              </button>
               <button class="btn btn-outline btn-sm" style="flex:1" @click="viewOrder(d.orderId)">View Order</button>
             </div>
           </template>
@@ -97,6 +101,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminDashboardStore } from '@/stores/adminDashboard'
 import { useNotificationStore } from '@/stores/notifications'
+import { Bell, User, Check, RotateCcw, CheckCircle2 } from 'lucide-vue-next'
 
 const auth        = useAuthStore()
 const store       = useAdminDashboardStore()
@@ -121,6 +126,11 @@ const countByStatus = computed(() => {
 const openCount     = computed(() => countByStatus.value['open'] || 0)
 const resolvedCount = computed(() => countByStatus.value['resolved'] || 0)
 
+const filteredDisputes = computed(() => {
+  if (filter.value === 'all') return store.disputes
+  return store.disputes.filter(d => d.status === filter.value)
+})
+
 function formatDate(d) {
   const dt = new Date(d)
   const now = Date.now()
@@ -130,10 +140,7 @@ function formatDate(d) {
   return dt.toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' })
 }
 
-async function setFilter(val) {
-  filter.value = val; loading.value = true
-  try { await store.fetchDisputes(val === 'all' ? null : val) } finally { loading.value = false }
-}
+function setFilter(val) { filter.value = val }
 
 async function resolve(id) {
   if (!resolutions[id]) return
@@ -149,9 +156,7 @@ async function refund(id) {
 
 function viewOrder(orderId) { alert(`Viewing Order #${orderId}`) }
 
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
+function toggleNotif() { showNotif.value = !showNotif.value }
 
 function handleNotifClick(n) {
   notif.markAsRead(n.id)

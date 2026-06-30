@@ -6,7 +6,7 @@
         
         <div style="position:relative">
           <button class="navbar-icon-btn" @click="toggleNotif" title="Notifications">
-            🔔
+            <Bell :size="20" />
             <span v-if="notif.unreadCount" class="notif-badge">{{ notif.unreadCount }}</span>
           </button>
 
@@ -21,7 +21,7 @@
           </div>
         </div>
 
-        <router-link to="/admin/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/admin/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
@@ -48,7 +48,7 @@
 
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
       <div v-else-if="!filteredVendors.length" class="empty">
-        <div class="empty-icon">🏪</div>
+        <div class="empty-icon"><Store :size="40" /></div>
         <p>No vendors found</p>
       </div>
 
@@ -56,14 +56,18 @@
         <div v-for="v in filteredVendors" :key="v.id" class="card" style="margin-bottom:0.75rem">
           <div class="card-body">
             <div style="display:flex;align-items:flex-start;gap:0.75rem">
-              <div style="width:48px;height:48px;border-radius:0.6rem;background:linear-gradient(135deg,#f0e8d8,#e8dcc8);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🏪</div>
+              <div style="width:48px;height:48px;border-radius:0.6rem;background:linear-gradient(135deg,#f0e8d8,#e8dcc8);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <Store :size="24" />
+              </div>
               <div style="flex:1;min-width:0">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
                   <div>
                     <div style="font-weight:700;font-size:0.95rem">{{ v.name }}</div>
-                    <div class="text-muted" style="font-size:0.78rem;margin-top:0.15rem">📍 {{ v.location }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;margin-top:0.15rem;display:flex;align-items:center;gap:0.2rem"><MapPin :size="11" /> {{ v.location }}</div>
                     <div class="text-muted" style="font-size:0.75rem">Owner: {{ v.ownerName }}</div>
-                    <div v-if="v.rating" style="font-size:0.75rem;color:#b45309;font-weight:700;margin-top:0.2rem">★ {{ v.rating }}</div>
+                    <div v-if="v.rating" style="font-size:0.75rem;color:#b45309;font-weight:700;margin-top:0.2rem;display:flex;align-items:center;gap:0.2rem">
+                      <Star :size="11" fill="#b45309" stroke="none" /> {{ v.rating }}
+                    </div>
                     <div style="font-size:0.72rem;color:var(--color-muted)">{{ v.totalOrders }} orders total</div>
                   </div>
                   <span :class="['badge', `badge-${v.status}`]">{{ v.status.toUpperCase() }}</span>
@@ -71,14 +75,14 @@
 
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.85rem">
                   <template v-if="v.status==='pending'">
-                    <button class="btn btn-success btn-sm" @click="updateStatus(v.id,'active')">✓ Approve</button>
-                    <button class="btn btn-danger btn-sm" @click="updateStatus(v.id,'inactive')">✗ Reject</button>
+                    <button class="btn btn-success btn-sm" style="display:flex;align-items:center;gap:0.3rem" @click="updateStatus(v.id,'active')"><Check :size="13" /> Approve</button>
+                    <button class="btn btn-danger btn-sm" style="display:flex;align-items:center;gap:0.3rem" @click="updateStatus(v.id,'inactive')"><X :size="13" /> Reject</button>
                   </template>
                   <template v-else-if="v.status==='active'">
                     <button class="btn btn-ghost btn-sm" @click="updateStatus(v.id,'inactive')">Deactivate</button>
                   </template>
                   <template v-else-if="v.status==='inactive'">
-                    <button class="btn btn-success btn-sm" @click="updateStatus(v.id,'active')">Reactivate</button>
+                    <button class="btn btn-success btn-sm" style="display:flex;align-items:center;gap:0.3rem" @click="updateStatus(v.id,'active')"><Check :size="13" /> Reactivate</button>
                   </template>
                 </div>
               </div>
@@ -95,6 +99,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminDashboardStore } from '@/stores/adminDashboard'
 import { useNotificationStore } from '@/stores/notifications'
+import { Bell, User, Store, MapPin, Star, Check, X } from 'lucide-vue-next'
 
 const auth    = useAuthStore()
 const store   = useAdminDashboardStore()
@@ -120,9 +125,7 @@ const filteredVendors  = computed(() => filter.value === 'all' ? store.vendors :
 
 async function updateStatus(vendorId, status) { await store.updateVendorStatus(vendorId, status) }
 
-function toggleNotif() {
-  showNotif.value = !showNotif.value
-}
+function toggleNotif() { showNotif.value = !showNotif.value }
 
 function handleNotifClick(n) {
   notif.markAsRead(n.id)

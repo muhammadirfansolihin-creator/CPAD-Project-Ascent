@@ -6,10 +6,10 @@
       </div>
       <div class="navbar-actions">
         <router-link to="/cart" class="navbar-icon-btn">
-          🛒
+          <ShoppingCart :size="20" />
           <span v-if="cart.itemCount" class="badge-dot"></span>
         </router-link>
-        <router-link to="/profile" class="navbar-icon-btn">👤</router-link>
+        <router-link to="/profile" class="navbar-icon-btn"><User :size="20" /></router-link>
       </div>
     </nav>
 
@@ -45,11 +45,11 @@
       <!-- Menu -->
       <div class="card profile-menu-card">
         <router-link to="/profile/edit" class="profile-menu-item">
-          <span class="profile-menu-label">👤 Edit Profile</span>
+          <span class="profile-menu-label" style="display:flex;align-items:center;gap:0.5rem"><User :size="15" /> Edit Profile</span>
           <span class="text-muted">›</span>
         </router-link>
         <router-link to="/profile/reviews" class="profile-menu-item profile-menu-item-last">
-          <span class="profile-menu-label">⭐ My Reviews</span>
+          <span class="profile-menu-label" style="display:flex;align-items:center;gap:0.5rem"><Star :size="15" /> My Reviews</span>
           <span class="text-muted">›</span>
         </router-link>
       </div>
@@ -62,11 +62,11 @@
     <!-- Bottom nav -->
     <nav class="bottom-nav">
       <router-link to="/" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <Home :size="22" />
         Home
       </router-link>
       <router-link to="/orders" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
     </nav>
@@ -79,6 +79,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
+import { ShoppingCart, User, Home, ClipboardList, Star } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth   = useAuthStore()
@@ -94,13 +95,6 @@ const stats = ref({
 })
 
 const initials = computed(() => (auth.user?.name || '?').charAt(0).toUpperCase())
-
-function copyReferralCode() {
-  navigator.clipboard.writeText(referral.value.code).then(() => {
-    copied.value = true
-    setTimeout(() => (copied.value = false), 2000)
-  })
-}
 
 function handleLogout() {
   auth.logout()

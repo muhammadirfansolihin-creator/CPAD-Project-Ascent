@@ -2,7 +2,7 @@
   <div>
     <nav class="navbar">
       <div class="navbar-left">
-        <button class="navbar-back-btn" @click="$router.push('/')">‹</button>
+        <button class="navbar-back-btn" @click="$router.push('/')"><ChevronLeft :size="22" /></button>
         <div class="navbar-brand">{{ catLabel }}</div>
       </div>
     </nav>
@@ -11,7 +11,7 @@
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
 
       <div v-else-if="!vendors.length" class="empty">
-        <div class="empty-icon">🍽️</div>
+        <div class="empty-icon"><UtensilsCrossed :size="40" /></div>
         <p>No vendors found in this category</p>
         <p style="font-size:0.8rem;color:var(--color-muted)">Category: {{ route.params.catValue }}</p>
       </div>
@@ -28,8 +28,10 @@
           </div>
           <div class="menu-item-info">
             <div class="menu-item-name">{{ v.name }}</div>
-            <div class="menu-item-desc">📍 {{ v.location }}</div>
-            <div class="menu-item-price" v-if="v.rating">★ {{ v.rating }}</div>
+            <div class="menu-item-desc" style="display:flex;align-items:center;gap:0.2rem"><MapPin :size="11" /> {{ v.location }}</div>
+            <div class="menu-item-price" v-if="v.rating" style="display:flex;align-items:center;gap:0.2rem">
+              <Star :size="11" fill="#d97706" stroke="none" /> {{ v.rating }}
+            </div>
           </div>
         </router-link>
       </div>
@@ -37,11 +39,11 @@
 
     <nav class="bottom-nav">
       <router-link to="/" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <Home :size="22" />
         Home
       </router-link>
       <router-link to="/orders" class="bottom-nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect width="6" height="4" x="9" y="3" rx="2"/></svg>
+        <ClipboardList :size="22" />
         Orders
       </router-link>
     </nav>
@@ -52,6 +54,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { ChevronLeft, Home, ClipboardList, MapPin, Star, UtensilsCrossed } from 'lucide-vue-next'
 
 const route = useRoute()
 
@@ -77,9 +80,7 @@ const VENDOR_IMAGES = {
   3: '/drinkstall.jfif' 
 }
 
-function vendorImage(id) { 
-  return VENDOR_IMAGES[id] || '' 
-}
+function vendorImage(id) { return VENDOR_IMAGES[id] || '' }
 
 function vendorEmoji(name) {
   const n = (name || '').toLowerCase()
@@ -96,59 +97,32 @@ async function loadVendors() {
   
   try {
     const cat = route.params.catValue
-    console.log('Loading category:', cat)
+    if (!cat) { vendors.value = []; return }
     
-    if (!cat) {
-      console.error('No category parameter found')
-      vendors.value = []
-      return
-    }
-    
-    // For 'halal' category, use the regular vendors endpoint and filter
     if (cat === 'halal') {
-      console.log('Fetching halal vendors...')
       const { data } = await axios.get('/api/vendors')
-      console.log('All vendors:', data)
-      vendors.value = data.filter(v => v.isHalal || true) // Adjust this condition based on your data
-      console.log('Halal vendors:', vendors.value)
-    } 
-    // For regular categories (rice, noodles, drinks, snacks, vegetarian, other)
-    else {
-      // Try the category endpoint first
+      vendors.value = data.filter(v => v.isHalal || true)
+    } else {
       try {
-        console.log(`Fetching vendors for category: ${cat}`)
         const { data } = await axios.get(`/api/vendors/category/${cat}`)
-        console.log('Category vendors:', data)
         vendors.value = data
       } catch (apiError) {
-        console.error('Category API error:', apiError)
-        // Fallback: fetch all vendors and filter locally
-        console.log('Falling back to local filtering...')
         const { data } = await axios.get('/api/vendors')
-        console.log('All vendors:', data)
-        
-        // Since we don't have categories in vendor data, we need to fetch menu items
         const vendorsWithCategories = await Promise.all(
           data.map(async (vendor) => {
             try {
               const menuRes = await axios.get(`/api/vendors/${vendor.id}/menu`)
-              const hasCategory = menuRes.data.some(item => 
-                item.category === cat && item.inStock !== false
-              )
+              const hasCategory = menuRes.data.some(item => item.category === cat && item.inStock !== false)
               return { ...vendor, hasCategory }
             } catch (err) {
-              console.error(`Error fetching menu for vendor ${vendor.id}:`, err)
               return { ...vendor, hasCategory: false }
             }
           })
         )
-        
         vendors.value = vendorsWithCategories.filter(v => v.hasCategory)
-        console.log('Filtered vendors:', vendors.value)
       }
     }
   } catch (err) {
-    console.error('Error loading vendors:', err)
     error.value = err.message
     vendors.value = []
   } finally {
@@ -156,15 +130,6 @@ async function loadVendors() {
   }
 }
 
-// Watch for route changes
-watch(() => route.params.catValue, (newCat) => {
-  console.log('Category changed to:', newCat)
-  loadVendors()
-})
-
-// Load on mount
-onMounted(() => {
-  console.log('CategoryView mounted with params:', route.params)
-  loadVendors()
-})
+watch(() => route.params.catValue, () => { loadVendors() })
+onMounted(() => { loadVendors() })
 </script>
