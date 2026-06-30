@@ -102,6 +102,24 @@ class StudentController {
         return $this->json($res, $formatted);
     }
 
+    public function searchMenuItems(Request $req, Response $res): Response {
+    $search = trim($req->getQueryParams()['search'] ?? '');
+    if ($search === '') return $this->json($res, []);
+
+    $rows = $this->vendors->searchMenuItems($search);
+
+    return $this->json($res, array_map(fn($i) => [
+        'id'          => (int)$i['id'],
+        'vendorId'    => (int)$i['vendor_id'],
+        'vendorName'  => $i['vendor_name'],
+        'name'        => $i['name'],
+        'description' => $i['description'],
+        'price'       => (float)$i['price'],
+        'category'    => $i['category'],
+        'imageUrl'    => $i['image_url'],
+    ], $rows));
+}
+
     public function getOrders(Request $req, Response $res): Response {
         $userId = (int)$req->getAttribute('userId');
         $orders = $this->orders->getStudentOrders($userId);

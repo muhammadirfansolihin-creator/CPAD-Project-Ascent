@@ -20,6 +20,7 @@ $studentController = new StudentController($vendorRepo, $orderRepo, $disputeRepo
 $app->get('/api/vendors', [$studentController, 'getVendors'])->add(new AuthMiddleware());
 $app->get('/api/vendors/{id}', [$studentController, 'getVendorDetails'])->add(new AuthMiddleware());
 $app->get('/api/vendors/{id}/menu', [$studentController, 'getVendorMenu'])->add(new AuthMiddleware());
+$app->get('/api/menu-items/search', [$studentController, 'searchMenuItems'])->add(new AuthMiddleware());
 $app->get('/api/orders', [$studentController, 'getOrders'])->add(new AuthMiddleware());
 $app->post('/api/orders', [$studentController, 'createOrder'])->add(new AuthMiddleware());
 $app->post('/api/disputes', [$studentController, 'fileDispute'])->add(new AuthMiddleware());

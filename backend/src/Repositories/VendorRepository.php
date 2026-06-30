@@ -56,6 +56,19 @@ class VendorRepository {
         return $stmt->fetchAll();
     }
 
+    public function searchMenuItems(string $search): array {
+    $stmt = $this->db->prepare(
+        'SELECT mi.*, v.name AS vendor_name, v.id AS vendor_id
+         FROM menu_items mi
+         JOIN vendors v ON v.id = mi.vendor_id
+         WHERE v.status = "active" AND mi.in_stock = 1
+           AND (mi.name LIKE ? OR mi.description LIKE ?)
+         LIMIT 20'
+    );
+    $stmt->execute(["%$search%", "%$search%"]);
+    return $stmt->fetchAll();
+}
+
     public function findVendorByOwnerId(int $ownerId): ?array {
         $stmt = $this->db->prepare('SELECT * FROM vendors WHERE owner_id = ?');
         $stmt->execute([$ownerId]);

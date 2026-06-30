@@ -56,49 +56,31 @@
     </div>
 
     <div v-if="loading" class="loading"><div class="spinner"></div></div>
-    <template v-else-if="!filteredVendors.length">
+    <template v-else-if="!search && !filteredVendors.length">
       <div class="empty"><div class="empty-icon">🍽️</div><p>No vendors found</p></div>
     </template>
     <template v-else>
       <!-- Today's Special: food item cards -->
-      <div class="section-row">
-        <span class="section-row-title">Today's Special</span>
-        <a class="section-row-link">See all →</a>
-      </div>
-      <div class="horizontal-scroll" ref="vendorsRef">
-        <router-link
-          v-for="item in featuredItems.slice(0, 6)"
-          :key="'fi'+item.vendorId+item.name"
-          :to="`/vendors/${item.vendorId}`"
-          class="vendor-card"
-        >
-          <div class="vendor-card-img" :style="(item.imageUrl || foodImage(item.category)) ? `background-image:url('${item.imageUrl || foodImage(item.category)}');background-size:cover;background-position:center;` : ''">
-            <span v-if="!item.imageUrl && !foodImage(item.category)">{{ itemEmoji(item.category) }}</span>
-          </div>
-          <div class="vendor-card-body">
-            <div class="vendor-card-name">{{ item.name }}</div>
-            <div class="vendor-card-meta" style="color:var(--color-muted);font-size:0.72rem;margin-top:0.15rem">From {{ item.vendorName }}</div>
-            <div class="vendor-card-rating">
-              <span style="color:var(--color-primary);font-weight:700;font-size:0.8rem">RM {{ Number(item.price).toFixed(2) }}</span>
-              <span class="badge badge-halal">HALAL</span>
-            </div>
-          </div>
-        </router-link>
-      </div>
-
-      <!-- Category sections (vendor cards) -->
-      <template v-for="cat in visibleCategories" :key="cat.value">
-        <div v-if="vendorsByCategory[cat.value]?.length" class="section-row" style="margin-top:0.5rem">
-          <span class="section-row-title">{{ cat.label }}</span>
+      <template v-if="!search">
+        <div class="section-row">
+          <span class="section-row-title">Today's Special</span>
           <a class="section-row-link">See all →</a>
         </div>
-        <div v-if="vendorsByCategory[cat.value]?.length" class="horizontal-scroll">
-          <router-link v-for="v in vendorsByCategory[cat.value]" :key="cat.value+v.id" :to="`/vendors/${v.id}`" class="vendor-card">
-            <div class="vendor-card-img" :style="{ backgroundImage: `url(${vendorImage(v.id)})`, backgroundSize: 'cover', backgroundPosition: 'center'}"></div>
+        <div class="horizontal-scroll" ref="vendorsRef">
+          <router-link
+            v-for="item in featuredItems.slice(0, 6)"
+            :key="'fi'+item.vendorId+item.name"
+            :to="`/vendors/${item.vendorId}`"
+            class="vendor-card"
+          >
+            <div class="vendor-card-img" :style="(item.imageUrl || foodImage(item.category)) ? `background-image:url('${item.imageUrl || foodImage(item.category)}');background-size:cover;background-position:center;` : ''">
+              <span v-if="!item.imageUrl && !foodImage(item.category)">{{ itemEmoji(item.category) }}</span>
+            </div>
             <div class="vendor-card-body">
-              <div class="vendor-card-name">{{ v.name }}</div>
+              <div class="vendor-card-name">{{ item.name }}</div>
+              <div class="vendor-card-meta" style="color:var(--color-muted);font-size:0.72rem;margin-top:0.15rem">From {{ item.vendorName }}</div>
               <div class="vendor-card-rating">
-                <span v-if="v.rating">★ {{ v.rating }}</span>
+                <span style="color:var(--color-primary);font-weight:700;font-size:0.8rem">RM {{ Number(item.price).toFixed(2) }}</span>
                 <span class="badge badge-halal">HALAL</span>
               </div>
             </div>
@@ -106,24 +88,90 @@
         </div>
       </template>
 
-      <!-- All vendors grid if searching -->
-      <template v-if="search">
-        <div class="section-row"><span class="section-row-title">Search Results</span></div>
-        <div style="padding:0 1rem 1rem">
-          <div class="grid-2">
-            <router-link v-for="v in filteredVendors" :key="'all'+v.id" :to="`/vendors/${v.id}`" class="vendor-card">
-              <div class="vendor-card-img">{{ vendorEmoji(v.name) }}</div>
+      <!-- Category sections (vendor cards) - Hide when searching -->
+      <template v-if="!search">
+        <template v-for="cat in visibleCategories" :key="cat.value">
+          <div v-if="vendorsByCategory[cat.value]?.length" class="section-row" style="margin-top:0.5rem">
+            <span class="section-row-title">{{ cat.label }}</span>
+            <a class="section-row-link">See all →</a>
+          </div>
+          <div v-if="vendorsByCategory[cat.value]?.length" class="horizontal-scroll">
+            <router-link v-for="v in vendorsByCategory[cat.value]" :key="cat.value+v.id" :to="`/vendors/${v.id}`" class="vendor-card">
+              <div class="vendor-card-img" :style="{ backgroundImage: `url(${vendorImage(v.id)})`, backgroundSize: 'cover', backgroundPosition: 'center'}"></div>
               <div class="vendor-card-body">
                 <div class="vendor-card-name">{{ v.name }}</div>
-                <div class="vendor-card-meta">📍 {{ v.location }}</div>
                 <div class="vendor-card-rating">
                   <span v-if="v.rating">★ {{ v.rating }}</span>
-                  <span :class="['badge', v.isOpen?'badge-active':'badge-inactive']" style="font-size:0.65rem">{{ v.isOpen?'Open':'Closed' }}</span>
+                  <span class="badge badge-halal">HALAL</span>
                 </div>
               </div>
             </router-link>
           </div>
+        </template>
+      </template>
+
+      <!-- Combined Search Results -->
+      <template v-if="search">
+        <div class="section-row">
+          <span class="section-row-title">Search Results for "{{ search }}"</span>
         </div>
+        
+        <!-- Meals Section -->
+        <template v-if="menuSearchResults.length">
+          <div style="padding:0 1rem 0.5rem">
+            <h4 style="margin:0 0 0.5rem 0; color: var(--color-muted); font-size:0.9rem">🍽️ Meals ({{ menuSearchResults.length }})</h4>
+            <div class="grid-2">
+              <router-link
+                v-for="item in menuSearchResults"
+                :key="'menu'+item.id"
+                :to="`/vendors/${item.vendorId}`"
+                class="vendor-card"
+              >
+                <div class="vendor-card-img" :style="(item.imageUrl || foodImage(item.category)) ? `background-image:url('${item.imageUrl || foodImage(item.category)}');background-size:cover;background-position:center;` : ''">
+                  <span v-if="!item.imageUrl && !foodImage(item.category)">{{ itemEmoji(item.category) }}</span>
+                </div>
+                <div class="vendor-card-body">
+                  <div class="vendor-card-name">{{ item.name }}</div>
+                  <div class="vendor-card-meta" style="color:var(--color-muted);font-size:0.72rem">From {{ item.vendorName }}</div>
+                  <div class="vendor-card-rating">
+                    <span style="color:var(--color-primary);font-weight:700;font-size:0.8rem">RM {{ Number(item.price).toFixed(2) }}</span>
+                    <span class="badge badge-halal">HALAL</span>
+                  </div>
+                </div>
+              </router-link>
+            </div>
+          </div>
+        </template>
+        <template v-else-if="searchingMenu">
+          <div style="padding:0 1rem; text-align:center; color:var(--color-muted)">Searching meals...</div>
+        </template>
+
+        <!-- Vendors Section -->
+        <template v-if="filteredVendors.length">
+          <div style="padding:0 1rem 0.5rem">
+            <h4 style="margin:0 0 0.5rem 0; color: var(--color-muted); font-size:0.9rem">🏪 Vendors ({{ filteredVendors.length }})</h4>
+            <div class="grid-2">
+              <router-link v-for="v in filteredVendors" :key="'all'+v.id" :to="`/vendors/${v.id}`" class="vendor-card">
+                <div class="vendor-card-img" :style="`background-image:url(${vendorImage(v.id)});background-size:cover;background-position:center;`">
+                  <span v-if="!vendorImage(v.id)">{{ vendorEmoji(v.name) }}</span>
+                </div>
+                <div class="vendor-card-body">
+                  <div class="vendor-card-name">{{ v.name }}</div>
+                  <div class="vendor-card-meta">📍 {{ v.location }}</div>
+                  <div class="vendor-card-rating">
+                    <span v-if="v.rating">★ {{ v.rating }}</span>
+                    <span :class="['badge', v.isOpen?'badge-active':'badge-inactive']" style="font-size:0.65rem">{{ v.isOpen?'Open':'Closed' }}</span>
+                  </div>
+                </div>
+              </router-link>
+            </div>
+          </div>
+        </template>
+        
+        <!-- No Results -->
+        <template v-if="!menuSearchResults.length && !filteredVendors.length && !searchingMenu">
+          <div class="empty"><div class="empty-icon">🔍</div><p>No results found for "{{ search }}"</p></div>
+        </template>
       </template>
     </template>
 
@@ -163,6 +211,9 @@ const backgrounds = {
   dessert:   'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1200&auto=format&fit=crop',
   default:   'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop'
 }
+
+const menuSearchResults = ref([])
+const searchingMenu = ref(false)
 
 function getBackgroundImage(theme) {
   return backgrounds[theme] || backgrounds.default
@@ -289,5 +340,22 @@ onMounted(async () => {
       .filter(r => r.status === 'fulfilled')
       .flatMap(r => r.value)
   } finally { loading.value = false }
+})
+
+import { watch } from 'vue'
+
+let searchDebounce = null
+watch(search, (val) => {
+  clearTimeout(searchDebounce)
+  if (!val) { menuSearchResults.value = []; return }
+  searchDebounce = setTimeout(async () => {
+    searchingMenu.value = true
+    try {
+      const { data } = await axios.get('/api/menu-items/search', { params: { search: val } })
+      menuSearchResults.value = data
+    } finally {
+      searchingMenu.value = false
+    }
+  }, 300)
 })
 </script>
