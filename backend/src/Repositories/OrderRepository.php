@@ -135,10 +135,8 @@ class OrderRepository {
             'SELECT r.id, r.rating, r.comment, r.created_at,
                     v.id AS vendor_id, v.name AS vendor_name,
                     (SELECT GROUP_CONCAT(oi.name SEPARATOR ", ")
-                     FROM orders o
-                     JOIN order_items oi ON oi.order_id = o.id
-                     WHERE o.user_id = r.user_id AND o.vendor_id = r.vendor_id
-                     ORDER BY o.created_at DESC LIMIT 1
+                    FROM order_items oi
+                    WHERE oi.order_id = r.order_id
                     ) AS items_ordered
              FROM reviews r
              JOIN vendors v ON v.id = r.vendor_id
