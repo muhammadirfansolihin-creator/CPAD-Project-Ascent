@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CampusEats UTM</string>
+    <string name="title_activity_main">CampusEats UTM</string>
+    <string name="package_name">com.utm.campuseats</string>
+    <string name="custom_url_scheme">com.utm.campuseats</string>
+</resources>
