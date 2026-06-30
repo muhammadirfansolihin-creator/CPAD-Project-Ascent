@@ -106,7 +106,7 @@ class StudentController {
         $category = $args['category'] ?? '';
         
         // Valid categories
-        $validCategories = ['rice', 'noodles', 'drinks', 'snacks', 'vegetarian'];
+        $validCategories = ['rice', 'noodles', 'drinks', 'snacks', 'vegetarian', 'other'];
         if (!in_array($category, $validCategories)) {
             return $this->json($res, ['error' => 'Invalid category'], 400);
         }
