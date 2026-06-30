@@ -102,6 +102,38 @@ class StudentController {
         return $this->json($res, $formatted);
     }
 
+    public function getVendorsByCategory(Request $req, Response $res, array $args): Response {
+        $category = $args['category'] ?? '';
+        
+        // Valid categories
+        $validCategories = ['rice', 'noodles', 'drinks', 'snacks', 'vegetarian'];
+        if (!in_array($category, $validCategories)) {
+            return $this->json($res, ['error' => 'Invalid category'], 400);
+        }
+        
+        $rows = $this->vendors->getVendorsByMenuCategory($category);
+        
+        $result = [];
+        foreach ($rows as $v) {
+            $rating = $this->vendors->getAverageRating((int)$v['id']);
+            $result[] = [
+                'id'           => (int)$v['id'],
+                'ownerId'      => (int)$v['owner_id'],
+                'ownerName'    => $v['owner_name'],
+                'name'         => $v['name'],
+                'location'     => $v['location'],
+                'openingHours' => $v['opening_hours'],
+                'imageUrl'     => $v['image_url'],
+                'status'       => $v['status'],
+                'isOpen'       => (bool)$v['is_open'],
+                'rating'       => $rating !== null ? round($rating, 1) : null,
+                'totalOrders'  => $this->vendors->getOrderCount((int)$v['id']),
+                'createdAt'    => $v['created_at']
+            ];
+        }
+        return $this->json($res, $result);
+    }
+
     public function searchMenuItems(Request $req, Response $res): Response {
     $search = trim($req->getQueryParams()['search'] ?? '');
     if ($search === '') return $this->json($res, []);

@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import LoginView from '@/views/LoginView.vue'
 import HomeView from '@/views/student/HomeView.vue'
 import VendorMenuView from '@/views/student/VendorMenuView.vue'
+import CategoryView from '@/views/student/CategoryView.vue'
 import CartView from '@/views/student/CartView.vue'
 import OrderHistoryView from '@/views/student/OrderHistoryView.vue'
 import StudentProfile from '@/views/student/StudentProfile.vue'
@@ -27,6 +28,8 @@ const routes = [
   { path: '/profile',       component: StudentProfile,   meta: { role: 'student' } },
   { path: '/profile/edit',  component: () => import('@/views/student/EditProfileView.vue'), meta: { role: 'student' } },
   { path: '/profile/reviews', component: () => import('@/views/student/MyReviewsView.vue'), meta: { role: 'student' } },
+  { path: '/today-special', component: () => import('@/views/student/TodaysSpecialView.vue'), meta: { role: 'student' } },
+  { path: '/category/:catValue', component: () => import('@/views/student/CategoryView.vue'), meta: { role: 'student' } },
   // Vendor
   { path: '/vendor',        component: VendorDashboardView, meta: { role: 'vendor' } },
   { path: '/vendor/orders', component: VendorOrdersView,    meta: { role: 'vendor' } },
