@@ -47,13 +47,13 @@
       </div>
 
       <div v-if="loading" class="loading"><div class="spinner"></div></div>
-      <div v-else-if="!filteredOrders.length" class="empty">
+      <div v-else-if="!paginatedOrders.length" class="empty">
         <div class="empty-icon">📋</div>
         <p>No orders here</p>
         <router-link to="/" class="btn btn-primary" style="margin-top:1rem">Order Now</router-link>
       </div>
 
-      <div v-for="order in filteredOrders" :key="order.id" class="order-card">
+      <div v-for="order in paginatedOrders" :key="order.id" class="order-card">
         <div class="order-card-header">
           <div style="flex:1;min-width:0">
             <div class="order-card-vendor">{{ order.vendorName }}</div>
@@ -74,6 +74,16 @@
             <button class="btn btn-outline btn-sm" @click="reorder(order)">Reorder</button>
           </div>
         </div>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:1.5rem">
+        <button class="btn btn-ghost btn-sm" :disabled="currentPage===1" @click="goToPage(currentPage-1)">← Previous</button>
+        <button v-for="p in totalPages" :key="p"
+          :class="['btn', 'btn-sm', currentPage===p ? 'btn-primary' : 'btn-outline']"
+          style="min-width:36px"
+          @click="goToPage(p)">{{ p }}</button>
+        <button class="btn btn-ghost btn-sm" :disabled="currentPage===totalPages" @click="goToPage(currentPage+1)">Next →</button>
       </div>
     </div>
 
@@ -149,7 +159,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
@@ -165,6 +175,8 @@ const activeTab = ref('all')
 const dateFilter = ref('all') 
 const reviewedOrders  = ref(new Set())
 const disputedOrders  = ref(new Set())
+const currentPage = ref(1)
+const perPage = 5
 const notif = useNotificationStore()
 const showNotif = ref(false)
 
@@ -203,6 +215,20 @@ const filteredOrders = computed(() => {
 
   return result
 })
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredOrders.value.length / perPage)))
+
+const paginatedOrders = computed(() => {
+  const start = (currentPage.value - 1) * perPage
+  return filteredOrders.value.slice(start, start + perPage)
+})
+
+function goToPage(p) {
+  if (p < 1 || p > totalPages.value) return
+  currentPage.value = p
+}
+
+watch([activeTab, dateFilter], () => { currentPage.value = 1 })
 
 const reviewModal = reactive({ open:false, orderId:null, vendorId:null, vendorName:'', rating:0, comment:'', submitting:false, error:'' })
 const disputeModal = reactive({ open:false, orderId:null, vendorName:'', description:'', submitting:false, error:'' })
