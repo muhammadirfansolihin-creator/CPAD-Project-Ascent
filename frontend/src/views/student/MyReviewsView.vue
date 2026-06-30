@@ -27,7 +27,7 @@
           {{ reviews.length }} review{{ reviews.length !== 1 ? 's' : '' }} written
         </div>
 
-        <div v-for="review in reviews" :key="review.id" class="order-card my-review-card">
+        <div v-for="review in paginatedReviews" :key="review.id" class="order-card my-review-card">
 
           <!-- Header: vendor name + date -->
           <div class="order-card-header">
@@ -56,6 +56,17 @@
           </div>
 
         </div>
+
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:1.5rem">
+          <button class="btn btn-ghost btn-sm" :disabled="currentPage===1" @click="goToPage(currentPage-1)">← Previous</button>
+          <button v-for="p in totalPages" :key="p"
+            :class="['btn', 'btn-sm', currentPage===p ? 'btn-primary' : 'btn-outline']"
+            style="min-width:36px"
+            @click="goToPage(p)">{{ p }}</button>
+          <button class="btn btn-ghost btn-sm" :disabled="currentPage===totalPages" @click="goToPage(currentPage+1)">Next →</button>
+        </div>
+
       </div>
     </div>
 
@@ -73,11 +84,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
 const reviews = ref([])
 const loading = ref(true)
+
+const currentPage = ref(1)
+const perPage = 5
+
+const totalPages = computed(() => Math.max(1, Math.ceil(reviews.value.length / perPage)))
+
+const paginatedReviews = computed(() => {
+  const start = (currentPage.value - 1) * perPage
+  return reviews.value.slice(start, start + perPage)
+})
+
+function goToPage(p) {
+  if (p < 1 || p > totalPages.value) return
+  currentPage.value = p
+}
 
 function formatDate(d) {
   const dt = new Date(d)
