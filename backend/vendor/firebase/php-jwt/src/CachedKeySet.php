@@ -219,7 +219,7 @@ class CachedKeySet implements ArrayAccess
         }
 
         $callsPerMinute = $cacheItemData['callsPerMinute'] ?? 0;
-        $expiry = $cacheItemData['expiry'] ?? new \DateTime('+60 seconds', new \DateTimeZone('UTC'));
+        $expiry = $cacheItemData['expiry'] ?? new \DateTime('+60 seconds', new \DateTimeZone('UTC+0800'));
 
         if (++$callsPerMinute > $this->maxCallsPerMinute) {
             return true;

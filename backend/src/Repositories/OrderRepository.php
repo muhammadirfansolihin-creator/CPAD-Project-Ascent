@@ -174,18 +174,28 @@ class OrderRepository {
 
     public function getActiveBanner(): ?array
     {
+        // CURTIME() runs in the MySQL server's timezone (UTC), but start_time/end_time
+        // are stored as local Malaysia clock times. Compute "now" in the correct
+        // timezone in PHP instead of trusting the DB server's clock.
+        $nowLocal = new \DateTime('now', new \DateTimeZone('Asia/Kuala_Lumpur'));
+        $curTime = $nowLocal->format('H:i:s');
+
         $stmt = $this->db->prepare("
             SELECT *
             FROM dynamic_banners
             WHERE is_active = 1
              AND (
-             ( start_time <= end_time AND CURTIME() BETWEEN start_time AND end_time)
-             OR ( start_time > end_time AND ( CURTIME() >= start_time OR CURTIME() <= end_time)
+             ( start_time <= end_time AND :curTime1 BETWEEN start_time AND end_time)
+             OR ( start_time > end_time AND ( :curTime2 >= start_time OR :curTime3 <= end_time)
              )) 
             LIMIT 1
         ");
 
-        $stmt->execute();
+        $stmt->execute([
+            'curTime1' => $curTime,
+            'curTime2' => $curTime,
+            'curTime3' => $curTime,
+        ]);
 
         $banner = $stmt->fetch();
 
