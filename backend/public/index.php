@@ -4,6 +4,7 @@ declare(strict_types=1);
 use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
+date_default_timezone_set('UTC');
 // The config/db.php inclusion is dropped completely as autoload resolves App\Database via PSR-4 singleton setup maps.
 $app = AppFactory::create();
 $app->addBodyParsingMiddleware();
